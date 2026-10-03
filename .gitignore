@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Large datasets
+data/raw/*
+data/processed/*
+*.parquet
+*.tsv
+*.csv.gz
+
+# Model checkpoints
+models/*
+!models/.gitkeep
+*.pt
+*.pth
+*.bin
+*.safetensors
+
+# Temporary outputs
+outputs/
+tmp/
+cache/
+
+# Streamlit
+.streamlit/secrets.toml
