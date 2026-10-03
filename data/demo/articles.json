@@ -1,0 +1,167 @@
+[
+  {
+    "article_id": "art_001",
+    "timestamp": "2026-10-03T09:00:00Z",
+    "source": {
+      "name": "Synthetic Financial Wire",
+      "source_type": "demo",
+      "url": null
+    },
+    "title": "Central Bank Announces Unexpected Rate Increase",
+    "raw_text": "The central bank announced an unexpected 200 basis point increase in its policy rate, citing persistent inflationary pressure.",
+    "entities": [],
+    "tickers": [],
+    "url": null
+  },
+  {
+    "article_id": "art_002",
+    "timestamp": "2026-10-03T09:02:00Z",
+    "source": {
+      "name": "Synthetic Market News",
+      "source_type": "demo",
+      "url": null
+    },
+    "title": "Markets React to Surprise Rate Hike",
+    "raw_text": "Equity markets declined after the central bank unexpectedly increased its policy rate by 200 basis points.",
+    "entities": [],
+    "tickers": [],
+    "url": null
+  },
+  {
+    "article_id": "art_003",
+    "timestamp": "2026-10-03T09:05:00Z",
+    "source": {
+      "name": "Synthetic Financial Wire",
+      "source_type": "demo",
+      "url": null
+    },
+    "title": "Regulator Opens Investigation Into NovaBank",
+    "raw_text": "The financial regulator announced an investigation into NovaBank's lending practices.",
+    "entities": [],
+    "tickers": ["NVBK"],
+    "url": null
+  },
+  {
+    "article_id": "art_004",
+    "timestamp": "2026-10-03T09:07:00Z",
+    "source": {
+      "name": "Synthetic Business Daily",
+      "source_type": "demo",
+      "url": null
+    },
+    "title": "NovaBank Faces Regulatory Review",
+    "raw_text": "NovaBank is facing a regulatory review concerning its lending practices, according to authorities.",
+    "entities": [],
+    "tickers": ["NVBK"],
+    "url": null
+  },
+  {
+    "article_id": "art_005",
+    "timestamp": "2026-10-03T09:10:00Z",
+    "source": {
+      "name": "Synthetic Market News",
+      "source_type": "demo",
+      "url": null
+    },
+    "title": "NovaBank Denies Major Compliance Concerns",
+    "raw_text": "NovaBank said preliminary discussions with regulators had not identified any material compliance breach.",
+    "entities": [],
+    "tickers": ["NVBK"],
+    "url": null
+  },
+  {
+    "article_id": "art_006",
+    "timestamp": "2026-10-03T09:20:00Z",
+    "source": {
+      "name": "Synthetic Company News",
+      "source_type": "demo",
+      "url": null
+    },
+    "title": "Quantum Devices Launches New Processor",
+    "raw_text": "Quantum Devices announced the commercial launch of a new energy-efficient processor designed for high performance computing.",
+    "entities": [],
+    "tickers": ["QDEV"],
+    "url": null
+  },
+  {
+    "article_id": "art_007",
+    "timestamp": "2026-10-03T09:30:00Z",
+    "source": {
+      "name": "Synthetic Energy Wire",
+      "source_type": "demo",
+      "url": null
+    },
+    "title": "Global Supply Disruption Pushes Energy Prices Higher",
+    "raw_text": "A disruption in global energy supply pushed crude energy prices sharply higher amid concerns about prolonged shortages.",
+    "entities": [],
+    "tickers": [],
+    "url": null
+  },
+  {
+    "article_id": "art_008",
+    "timestamp": "2026-10-03T09:35:00Z",
+    "source": {
+      "name": "Synthetic Markets Daily",
+      "source_type": "demo",
+      "url": null
+    },
+    "title": "Energy Prices Rise Following Supply Disruption",
+    "raw_text": "Energy prices climbed after a significant supply disruption raised concerns about prolonged shortages.",
+    "entities": [],
+    "tickers": [],
+    "url": null
+  },
+  {
+    "article_id": "art_009",
+    "timestamp": "2026-10-03T09:45:00Z",
+    "source": {
+      "name": "Synthetic Corporate Wire",
+      "source_type": "demo",
+      "url": null
+    },
+    "title": "Apex Robotics Reports Record Quarterly Revenue",
+    "raw_text": "Apex Robotics reported record quarterly revenue and raised its full-year growth outlook.",
+    "entities": [],
+    "tickers": ["ARBT"],
+    "url": null
+  },
+  {
+    "article_id": "art_010",
+    "timestamp": "2026-10-03T10:00:00Z",
+    "source": {
+      "name": "Synthetic Credit Monitor",
+      "source_type": "demo"
+    },
+    "title": "Ratings Agency Downgrades MetroCredit",
+    "raw_text": "MetroCredit was downgraded following concerns about rising defaults in its consumer loan portfolio.",
+    "entities": [],
+    "tickers": ["MCRD"],
+    "url": null
+  },
+  {
+    "article_id": "art_011",
+    "timestamp": "2026-10-03T10:05:00Z",
+    "source": {
+      "name": "Synthetic Credit Monitor",
+      "source_type": "demo"
+    },
+    "title": "MetroCredit Downgrade Raises Default Concerns",
+    "raw_text": "A credit rating downgrade for MetroCredit reflects growing concerns over consumer loan defaults.",
+    "entities": [],
+    "tickers": ["MCRD"],
+    "url": null
+  },
+  {
+    "article_id": "art_012",
+    "timestamp": "2026-10-03T10:15:00Z",
+    "source": {
+      "name": "Synthetic Technology Daily",
+      "source_type": "demo"
+    },
+    "title": "CloudMatrix Secures Major Enterprise Contract",
+    "raw_text": "CloudMatrix announced a major enterprise contract expected to expand its recurring software revenue.",
+    "entities": [],
+    "tickers": ["CLMX"],
+    "url": null
+  }
+]

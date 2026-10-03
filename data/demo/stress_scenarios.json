@@ -1,0 +1,50 @@
+[
+  {
+    "scenario_id": "rate_hike",
+    "name": "Unexpected Rate Hike",
+    "description": "Synthetic scenario representing a sharp unexpected increase in policy rates.",
+    "shocks": {
+      "Financials": -0.03,
+      "Technology": -0.08,
+      "Industrials": -0.05,
+      "Healthcare": -0.02,
+      "Energy": -0.03,
+      "Consumer": -0.06,
+      "Utilities": -0.04,
+      "Government Bonds": -0.03,
+      "Corporate Bonds": -0.05
+    }
+  },
+  {
+    "scenario_id": "energy_disruption",
+    "name": "Global Energy Disruption",
+    "description": "Synthetic scenario representing a major energy supply disruption.",
+    "shocks": {
+      "Financials": -0.04,
+      "Technology": -0.05,
+      "Industrials": -0.06,
+      "Healthcare": -0.02,
+      "Energy": 0.08,
+      "Consumer": -0.07,
+      "Utilities": -0.03,
+      "Government Bonds": 0.02,
+      "Corporate Bonds": -0.04
+    }
+  },
+  {
+    "scenario_id": "credit_crisis",
+    "name": "Credit Stress Event",
+    "description": "Synthetic scenario representing a broad deterioration in credit quality.",
+    "shocks": {
+      "Financials": -0.12,
+      "Technology": -0.08,
+      "Industrials": -0.09,
+      "Healthcare": -0.04,
+      "Energy": -0.10,
+      "Consumer": -0.09,
+      "Utilities": -0.05,
+      "Government Bonds": 0.04,
+      "Corporate Bonds": -0.12
+    }
+  }
+]

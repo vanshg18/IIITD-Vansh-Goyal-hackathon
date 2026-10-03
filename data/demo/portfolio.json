@@ -1,0 +1,78 @@
+{
+  "portfolio_id": "demo_index_001",
+  "name": "EventPulse Synthetic Market Index",
+  "assets": [
+    {
+      "ticker": "QDEV",
+      "name": "Quantum Devices",
+      "sector": "Technology",
+      "weight": 0.10
+    },
+    {
+      "ticker": "CLMX",
+      "name": "CloudMatrix",
+      "sector": "Technology",
+      "weight": 0.09
+    },
+    {
+      "ticker": "ARBT",
+      "name": "Apex Robotics",
+      "sector": "Industrials",
+      "weight": 0.08
+    },
+    {
+      "ticker": "NVBK",
+      "name": "NovaBank",
+      "sector": "Financials",
+      "weight": 0.10
+    },
+    {
+      "ticker": "MCRD",
+      "name": "MetroCredit",
+      "sector": "Financials",
+      "weight": 0.08
+    },
+    {
+      "ticker": "HLTH",
+      "name": "Helix Health",
+      "sector": "Healthcare",
+      "weight": 0.08
+    },
+    {
+      "ticker": "MEDX",
+      "name": "Medexa",
+      "sector": "Healthcare",
+      "weight": 0.07
+    },
+    {
+      "ticker": "ENRG",
+      "name": "EnerGrid",
+      "sector": "Energy",
+      "weight": 0.09
+    },
+    {
+      "ticker": "PWRX",
+      "name": "PowerX",
+      "sector": "Energy",
+      "weight": 0.07
+    },
+    {
+      "ticker": "RETL",
+      "name": "RetailOne",
+      "sector": "Consumer",
+      "weight": 0.08
+    },
+    {
+      "ticker": "AUTO",
+      "name": "MotionWorks",
+      "sector": "Consumer",
+      "weight": 0.08
+    },
+    {
+      "ticker": "UTIL",
+      "name": "Urban Utilities",
+      "sector": "Utilities",
+      "weight": 0.08
+    }
+  ]
+}
