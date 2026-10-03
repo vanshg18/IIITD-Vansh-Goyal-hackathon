@@ -74,6 +74,9 @@ class EventClassification(BaseModel):
     label: str = Field(min_length=1)
     confidence: float = Field(ge=0.0, le=1.0)
 
+    # Explainable evidence from the classifier.
+    evidence_terms: list[str] = Field(default_factory=list)
+
 
 # ---------------------------------------------------------------------------
 # IMPACT
