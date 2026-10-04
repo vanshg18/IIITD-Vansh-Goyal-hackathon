@@ -181,6 +181,12 @@ class FinancialEvent(BaseModel):
     signal: SignalMetadata = Field(default_factory=SignalMetadata)
 
     affected_assets: list[str] = Field(default_factory=list)
+    
+    cluster_id: str | None = None
+    cluster_size: int = Field(
+        default=1,
+        ge=1,
+    )
 
 
 # ---------------------------------------------------------------------------

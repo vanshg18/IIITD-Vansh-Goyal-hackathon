@@ -121,3 +121,28 @@ def test_event_classifier_other():
     assert result.label == "Other"
 
     assert result.confidence == 0.35
+
+def test_software_does_not_trigger_geopolitical():
+
+    classifier = FinancialEventClassifier()
+
+    result = classifier.classify(
+        "CloudMatrix secured a major enterprise "
+        "contract that will expand its software revenue."
+    )
+
+    assert result.label != "Geopolitical"
+
+    assert "war" not in result.evidence_terms
+
+def test_war_triggers_geopolitical():
+
+    classifier = FinancialEventClassifier()
+
+    result = classifier.classify(
+        "The region entered a major war."
+    )
+
+    assert result.label == "Geopolitical"
+
+    assert "war" in result.evidence_terms

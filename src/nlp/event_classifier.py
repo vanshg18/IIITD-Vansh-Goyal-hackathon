@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from math import exp
 
 from src.engine.schemas import EventClassification
-
+import re
 
 @dataclass(frozen=True)
 class EventRule:
@@ -81,6 +81,8 @@ EVENT_RULES = [
         keywords={
             "credit downgrade": 5.0,
             "downgrade": 5.0,
+            "downgraded":5.0,
+            "downgrades":5.0,
             "default": 5.0,
             "rating downgrade": 5.0,
             "credit rating": 3.0,
@@ -160,9 +162,47 @@ class FinancialEventClassifier:
 
     @staticmethod
     def _normalise(text: str) -> str:
-        return " ".join(
-            text.lower().split()
+        """
+        Normalize text while preserving word boundaries.
+        """
+
+        text = text.lower()
+
+        text = re.sub(
+            r"\s+",
+            " ",
+            text,
         )
+
+        return text.strip()
+
+    @staticmethod
+    def _keyword_present(
+        text: str,
+        keyword: str,
+    ) -> bool:
+        """
+        Check whether a keyword/phrase occurs as a complete token/phrase.
+
+        This prevents:
+            "war" matching "software"
+            "market" matching "marketing"
+
+        while still allowing multi-word expressions such as:
+            "rate hike"
+            "credit downgrade"
+        """
+
+        pattern = (
+            r"(?<![a-z0-9])"
+            + re.escape(keyword.lower())
+            + r"(?![a-z0-9])"
+        )
+
+        return re.search(
+            pattern,
+            text,
+        ) is not None
 
     @staticmethod
     def _calculate_confidence(
@@ -225,8 +265,7 @@ class FinancialEventClassifier:
 
             for keyword, weight in rule.keywords.items():
 
-                if keyword in text:
-
+                if self._keyword_present(text,keyword,):
                     score += weight
                     matched_terms.append(keyword)
 
