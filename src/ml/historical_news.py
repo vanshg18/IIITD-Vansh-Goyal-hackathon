@@ -82,8 +82,6 @@ def collect_rows(
     # The heap contains the worst (highest hash) selected item at its root.
     heap: list[tuple[int, str]] = []
     selected: dict[str, dict[str, Any]] = {}
-    selected_priority: dict[str, int] = {}
-    valid_rows_seen = 0
 
     for chunk in pd.read_csv(path, chunksize=50_000, low_memory=False):
         date_col = date_column or _select_column(chunk.columns, aliases["date"])
@@ -99,11 +97,11 @@ def collect_rows(
                 continue
 
             raw_tickers = _text(record.get(ticker_col)).upper() if ticker_col else ""
-            symbols = [
-                part.strip().strip("[]'\\"").upper()
-                for part in re.split(r"[;,|]", raw_tickers)
-                if part.strip().strip("[]'\\"")
-            ]
+            symbols = []
+            for part in re.split(r"[;,|]", raw_tickers):
+                symbol = part.strip().strip("[]'").strip('"').upper()
+                if symbol:
+                    symbols.append(symbol)
             symbols = list(dict.fromkeys(symbols))
             if desired_tickers:
                 symbols = [symbol for symbol in symbols if symbol in desired_tickers]
@@ -127,7 +125,10 @@ def collect_rows(
                     re.sub(r"[^a-z0-9]+", " ", title.casefold()).strip(),
                 ])
             )
-            priority = int(hashlib.sha256(identity.encode("utf-8")).hexdigest(), 16)
+            priority = int(
+                hashlib.sha256(f"{sample_seed}|{identity}".encode("utf-8")).hexdigest(),
+                16,
+            )
 
             candidate = {
                 "timestamp": timestamp_value,
@@ -146,19 +147,15 @@ def collect_rows(
                     existing["raw_text"] = candidate["raw_text"]
                 continue
 
-            valid_rows_seen += 1
             if len(selected) < limit:
                 selected[identity] = candidate
-                selected_priority[identity] = priority
                 heapq.heappush(heap, (-priority, identity))
             else:
                 worst_priority, worst_identity = -heap[0][0], heap[0][1]
                 if priority < worst_priority:
                     heapq.heapreplace(heap, (-priority, identity))
                     selected.pop(worst_identity, None)
-                    selected_priority.pop(worst_identity, None)
                     selected[identity] = candidate
-                    selected_priority[identity] = priority
 
     rows = sorted(
         selected.values(),
