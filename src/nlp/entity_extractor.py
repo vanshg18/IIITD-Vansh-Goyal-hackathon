@@ -136,8 +136,10 @@ class FinancialEntityResolver:
             )
 
         self.alias_to_asset: dict[str, AssetEntity] = {}
+        self.name_to_ticker: dict[str, str] = {}
 
         for asset in self.assets:
+            self.name_to_ticker[normalize_company_name(asset.name)] = asset.ticker
             for alias in asset.aliases:
                 self.alias_to_asset[alias] = asset
 
@@ -324,6 +326,16 @@ class FinancialEntityResolver:
         resolved_entities = self.extract_entities(
             text=combined_text
         )
+
+        # Company-name matches must also produce ticker links. Previously,
+        # "Microsoft shares fell" could yield an ORGANIZATION entity but no
+        # MSFT ticker because extract_tickers only recognizes ticker tokens.
+        for entity in resolved_entities:
+            resolved_ticker = self.name_to_ticker.get(
+                normalize_company_name(entity.name)
+            )
+            if resolved_ticker and resolved_ticker not in tickers:
+                tickers.append(resolved_ticker)
 
         # Preserve entities already detected by a pretrained NER model.
         entity_map: dict[str, Entity] = {}
