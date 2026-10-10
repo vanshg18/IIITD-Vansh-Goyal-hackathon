@@ -112,8 +112,12 @@ def load_portfolio_with_state(
     if not isinstance(weights, dict):
         raise ValueError(f"Portfolio state {path} must contain a weights object.")
 
+    normalized_weights = {
+        str(ticker).strip().upper(): value
+        for ticker, value in weights.items()
+    }
     expected = {asset.ticker.upper() for asset in base_portfolio.assets}
-    supplied = {str(ticker).strip().upper() for ticker in weights}
+    supplied = set(normalized_weights)
     if expected != supplied:
         raise ValueError(
             "Persisted portfolio tickers do not match the current index universe. "
@@ -122,7 +126,7 @@ def load_portfolio_with_state(
 
     asset_rows = []
     for asset in base_portfolio.assets:
-        value = float(weights[asset.ticker])
+        value = float(normalized_weights[asset.ticker.upper()])
         if not math.isfinite(value) or value <= 0 or value > 1:
             raise ValueError(f"Invalid saved weight for {asset.ticker}: {value}")
         row = asset.model_dump()
@@ -290,7 +294,7 @@ def run_live_cycle(
     stress_tester = PortfolioStressTester()
     stress_results = stress_tester.evaluate_events(events)
     stress_latest_path = _resolve_path(stress_latest_output)
-    write_models_jsonl(stress_results, stress_latest_path)
+    write_models_jsonl([result.to_dict() for result in stress_results], stress_latest_path)
     appended_stresses = append_unique_jsonl(
         stress_results,
         _resolve_path(stress_history_output),
