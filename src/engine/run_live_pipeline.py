@@ -21,7 +21,6 @@ from src.ingestion import IngestionPipeline, build_live_sources
 from src.ingestion.normalizer import article_fingerprint
 from src.ingestion.storage import (
     append_articles_jsonl,
-    load_articles_jsonl,
     write_models_jsonl,
 )
 from src.module_a.rebalancer import (
@@ -89,6 +88,37 @@ def append_unique_jsonl(
             seen.add(identity)
             added += 1
     return added
+
+
+def load_processed_fingerprints(path: str | Path) -> set[str]:
+    """Load fingerprints for articles whose NLP/downstream cycle completed."""
+    target = Path(path)
+    if not target.exists():
+        return set()
+    payload = json.loads(target.read_text(encoding="utf-8"))
+    values = payload.get("processed_fingerprints") if isinstance(payload, dict) else None
+    if not isinstance(values, list) or any(not isinstance(value, str) for value in values):
+        raise ValueError(
+            f"Processed registry {target} must contain a processed_fingerprints list."
+        )
+    return set(values)
+
+
+def save_processed_fingerprints(
+    fingerprints: Iterable[str],
+    path: str | Path,
+    updated_at: datetime,
+) -> None:
+    """Atomically save processed article fingerprints after a successful cycle."""
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "updated_at": updated_at.astimezone(timezone.utc).isoformat(),
+        "processed_fingerprints": sorted(set(fingerprints)),
+    }
+    temporary = target.with_suffix(target.suffix + ".tmp")
+    temporary.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    temporary.replace(target)
 
 
 def load_portfolio_with_state(
@@ -181,6 +211,7 @@ def run_live_cycle(
     rebalance_latest_output: str | Path = "data/processed/latest_rebalance.json",
     rebalance_history_output: str | Path = "data/processed/rebalance_history.jsonl",
     portfolio_state_output: str | Path = "data/processed/index_portfolio_state.json",
+    processed_registry_output: str | Path = "data/processed/processed_articles.json",
     stress_latest_output: str | Path = "data/processed/latest_stress_results.jsonl",
     stress_history_output: str | Path = "data/processed/stress_results_history.jsonl",
     engine_factory: Callable[[], Any] | None = None,
@@ -213,19 +244,21 @@ def run_live_cycle(
             "message": "No source returned usable articles.",
         }
 
-    archived_articles = load_articles_jsonl(articles_path)
-    seen = {article_fingerprint(item) for item in archived_articles}
+    processed_registry_path = _resolve_path(processed_registry_output)
+    processed_fingerprints = load_processed_fingerprints(processed_registry_path)
     fresh_articles = []
+    fresh_in_cycle: set[str] = set()
     for article in fetched:
         fingerprint = article_fingerprint(article)
-        if fingerprint not in seen:
+        if fingerprint not in processed_fingerprints and fingerprint not in fresh_in_cycle:
             fresh_articles.append(article)
-            seen.add(fingerprint)
+            fresh_in_cycle.add(fingerprint)
 
-    # Archive all fetched rows idempotently; only freshly unseen rows go through
-    # the expensive transformer pipeline and trigger downstream state changes.
+    # Archive all fetched rows idempotently. "Archived" and "processed" are
+    # separate states: an article previously saved by run_ingestion but never
+    # scored by the model is still eligible for inference when fetched again.
     saved_count = append_articles_jsonl(fetched, articles_path)
-    print(f"Raw articles: fetched={len(fetched)}, new={len(fresh_articles)}, archived={saved_count}")
+    print(f"Raw articles: fetched={len(fetched)}, pending={len(fresh_articles)}, newly archived={saved_count}")
 
     if not fresh_articles:
         print("[INFO] No new articles in this window; inference and downstream actions skipped.")
@@ -305,6 +338,15 @@ def run_live_cycle(
         f"new historical records={appended_stresses}"
     )
 
+    # Mark records processed only after inference and both downstream modules
+    # complete, avoiding silent skips after a partial failure.
+    processed_fingerprints.update(fresh_in_cycle)
+    save_processed_fingerprints(
+        processed_fingerprints,
+        processed_registry_path,
+        updated_at=cycle_time,
+    )
+
     return {
         "exit_code": 0,
         "fetched_articles": len(fetched),
@@ -337,6 +379,7 @@ def main() -> int:
     parser.add_argument("--rebalance-output", default="data/processed/latest_rebalance.json")
     parser.add_argument("--rebalance-history-output", default="data/processed/rebalance_history.jsonl")
     parser.add_argument("--portfolio-state-output", default="data/processed/index_portfolio_state.json")
+    parser.add_argument("--processed-registry-output", default="data/processed/processed_articles.json")
     parser.add_argument("--stress-output", default="data/processed/latest_stress_results.jsonl")
     parser.add_argument("--stress-history-output", default="data/processed/stress_results_history.jsonl")
     args = parser.parse_args()
@@ -357,6 +400,7 @@ def main() -> int:
         rebalance_latest_output=args.rebalance_output,
         rebalance_history_output=args.rebalance_history_output,
         portfolio_state_output=args.portfolio_state_output,
+        processed_registry_output=args.processed_registry_output,
         stress_latest_output=args.stress_output,
         stress_history_output=args.stress_history_output,
     )
