@@ -3,10 +3,13 @@ Leakage-aware historical impact dataset and model.
 
 The model learns the magnitude of next-session abnormal return from the
 structured event features available to EventPulse. With daily close-only
-prices, signals are treated as end-of-day observations: an event is aligned
-to the latest close on or before its publication date, and the target is the
-next available close-to-close return. Weekend news therefore anchors to the
-last prior close. This is a proxy for market reaction, not causal attribution.
+prices, a US-equity event published before 16:00 America/New_York is anchored
+to the latest close strictly before its local publication date, so its target
+includes the event-day close-to-close return. A post-close event is anchored
+to that day's close and targets the next available session. Non-trading days
+naturally map to the most recent available close. This conservative cutoff
+avoids using a same-day close/volatility feature that was not yet observable.
+It is a market-reaction proxy, not causal attribution.
 """
 
 from __future__ import annotations
@@ -278,7 +281,16 @@ def build_market_reaction_dataset(
         timestamp = pd.to_datetime(timestamp_raw, utc=True, errors="coerce")
         if pd.isna(timestamp):
             continue
-        event_date = timestamp.tz_localize(None).normalize()
+        # Prices in this project are for US-listed equities. Convert the
+        # source timestamp to New York time before applying the regular-session
+        # close cutoff; a UTC calendar date is not the US market calendar date.
+        local_timestamp = timestamp.tz_convert("America/New_York")
+        event_date = local_timestamp.tz_localize(None).normalize()
+        after_close = (
+            local_timestamp.hour,
+            local_timestamp.minute,
+            local_timestamp.second,
+        ) >= (16, 0, 0)
         tickers = record.get("tickers") or record.get("affected_assets") or []
         for raw_ticker in tickers:
             ticker = str(raw_ticker).strip().upper()
@@ -287,8 +299,14 @@ def build_market_reaction_dataset(
                 skipped_no_price += 1
                 continue
 
-            # Map weekends/holidays to latest available close on or before event date.
-            anchor_index = int(history["date"].searchsorted(event_date, side="right")) - 1
+            # Before/at the close, only the previous session's close was
+            # reliably observable. Post-close items can anchor to the current
+            # day's close. searchsorted also maps weekends/holidays to the
+            # most recent actual trading close available in this price panel.
+            anchor_side = "right" if after_close else "left"
+            anchor_index = int(
+                history["date"].searchsorted(event_date, side=anchor_side)
+            ) - 1
             if anchor_index < 0:
                 skipped_no_price += 1
                 continue
