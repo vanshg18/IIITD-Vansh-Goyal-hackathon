@@ -72,6 +72,7 @@ Outputs are stored under `data/processed/` (ignored by Git):
 - `latest_events.jsonl` and `events_history.jsonl`: canonical financial event signals.
 - `latest_rebalance.json`, `rebalance_history.jsonl`, and `index_portfolio_state.json`: Module A outputs and persistent simulated weights.
 - `latest_stress_results.jsonl` and `stress_results_history.jsonl`: Module B outcomes and history.
+- `latest_cycle_status.json`: completion status and per-source success/errors for the most recent run.
 
 Overlapping news windows do not reapply already processed articles, and the index simulation state persists across runs. If you intentionally want to start the mock index from equal weights, back up and remove `index_portfolio_state.json`; do not delete the processed registry unless you also intend to reprocess old stories.
 
@@ -82,6 +83,26 @@ The lower-level NLP-only command remains available when you only want to emit ev
 ~~~bash
 python -m src.engine.run_live_intelligence --limit 10 --timespan 1day
 ~~~
+
+## Read signals over the API
+
+After running the live cycle at least once, start the file-backed read-only API:
+
+~~~bash
+uvicorn src.api.main:app --reload
+~~~
+
+FastAPI docs: `http://127.0.0.1:8000/docs`
+
+Endpoints include:
+
+- `GET /api/v1/health` and `GET /api/v1/cycle/latest`: service/artifact status and per-source outcomes.
+- `GET /api/v1/events/latest` and `GET /api/v1/events/history?limit=100`: structured event signals.
+- `GET /api/v1/module-a/latest` and `GET /api/v1/module-a/history?limit=100`: weights, signal changes and turnover.
+- `GET /api/v1/module-b/latest` and `GET /api/v1/module-b/history?limit=100`: triggered synthetic portfolio stress results.
+- `GET /api/v1/summary`: event-type counts, average sentiment/impact, and stress-test counts.
+
+The API reads persisted files and does not load transformer models per request. Refresh the signals by running the live-cycle command separately.
 
 ## Downstream modules
 
