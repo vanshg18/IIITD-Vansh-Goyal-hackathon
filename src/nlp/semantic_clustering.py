@@ -37,6 +37,7 @@ class SemanticEventClusterer:
         semantic_threshold: float = 0.60,
         max_hours_without_ticker: float = 24.0,
         max_hours_with_ticker: float = 48.0,
+        semantic_threshold_with_ticker: float = 0.52,
     ):
 
         self.embedder = (
@@ -59,6 +60,18 @@ class SemanticEventClusterer:
         self.max_hours_with_ticker = (
             max_hours_with_ticker
         )
+        # A shared ticker is useful evidence, but does not prove two articles
+        # describe the same event. Use a lower similarity threshold for
+        # ticker-linked stories while still preventing obvious over-merging.
+        self.semantic_threshold_with_ticker = float(
+            semantic_threshold_with_ticker
+        )
+        if not 0.0 <= self.semantic_threshold <= 1.0:
+            raise ValueError("semantic_threshold must be in [0, 1].")
+        if not 0.0 <= self.semantic_threshold_with_ticker <= 1.0:
+            raise ValueError("semantic_threshold_with_ticker must be in [0, 1].")
+        if self.max_hours_without_ticker < 0 or self.max_hours_with_ticker < 0:
+            raise ValueError("Clustering time windows must be non-negative.")
 
     @staticmethod
     def _hours_between(
@@ -108,11 +121,11 @@ class SemanticEventClusterer:
         if not same_event_type:
             return False
 
-        # Same known financial entity/ticker.
+        # Shared ticker and broad event label can still refer to distinct events.
         if ticker_overlap > 0:
             return (
-                hours_apart
-                <= self.max_hours_with_ticker
+                semantic_similarity >= self.semantic_threshold_with_ticker
+                and hours_apart <= self.max_hours_with_ticker
             )
 
         # Macro/system-level event without a ticker.
