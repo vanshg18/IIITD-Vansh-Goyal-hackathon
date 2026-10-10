@@ -25,6 +25,7 @@ from src.engine.corroboration import CorroborationEngine
 from src.engine.decay import TimeDecayEngine
 from src.engine.event_clustering import EventClusterer
 from src.engine.impact import ImpactEngine
+from src.engine.entity_merge import merge_entities
 from src.engine.schemas import (
     FinancialEvent,
     ImpactResult,
@@ -164,14 +165,14 @@ class EventIntelligenceEngine:
                 f"{article.raw_text}"
             )
 
-            model_entities = self.ner.extract(
-                text
+            model_entities = self.ner.extract(text)
+            merged_entities = merge_entities(
+                article.entities,
+                model_entities,
             )
 
             article_with_ner = article.model_copy(
-                update={
-                    "entities": model_entities
-                }
+                update={"entities": merged_entities}
             )
 
             enriched = (
