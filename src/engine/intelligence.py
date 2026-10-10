@@ -386,7 +386,7 @@ class EventIntelligenceEngine:
                     ),
                     signal=SignalMetadata(
                         novelty=novelty,
-                        corroboration_count=source_count,
+                        corroboration_count=corroboration.unique_source_count,
                         decay=decay,
                     ),
                     affected_assets=article.tickers,
