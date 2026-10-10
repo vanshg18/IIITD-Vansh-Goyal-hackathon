@@ -304,4 +304,6 @@ class FinancialEventClassifier:
             label=top_label,
             confidence=confidence,
             evidence_terms=evidence[top_label],
+            model_name="rule-baseline",
+            scores={},
         )

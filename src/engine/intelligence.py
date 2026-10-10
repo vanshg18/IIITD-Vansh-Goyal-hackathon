@@ -37,6 +37,13 @@ from src.nlp.event_classifier import (
 from src.nlp.sentiment import (
     FinancialSentimentAnalyzer,
 )
+from src.nlp.financial_ner import FinancialNER
+from src.nlp.event_router import (
+    EventClassifierRouter,
+)
+from src.nlp.semantic_clustering import (
+    SemanticEventClusterer,
+)
 
 
 class EventIntelligenceEngine:
@@ -50,6 +57,7 @@ class EventIntelligenceEngine:
         sentiment_analyzer=None,
         event_classifier=None,
         entity_resolver=None,
+        use_pretrained=True,
     ):
 
         self.portfolio = (
@@ -63,10 +71,29 @@ class EventIntelligenceEngine:
             or FinancialSentimentAnalyzer()
         )
 
-        self.event_classifier = (
-            event_classifier
-            or FinancialEventClassifier()
-        )
+        if event_classifier is not None:
+
+            self.event_classifier = (
+                event_classifier
+            )
+
+        elif use_pretrained:
+
+            if event_classifier is not None:
+
+                self.event_classifier = (event_classifier)
+
+            else:
+
+                self.event_classifier = (EventClassifierRouter())
+
+        else:
+
+            self.event_classifier = (
+                FinancialEventClassifier()
+            )
+
+        self.ner = FinancialNER()
 
         self.entity_resolver = (
             entity_resolver
@@ -74,8 +101,10 @@ class EventIntelligenceEngine:
                 self.portfolio
             )
         )
-
-        self.clusterer = EventClusterer()
+        
+        self.clusterer = SemanticEventClusterer(
+            event_classifier=self.event_classifier
+        )
 
         self.impact_engine = ImpactEngine()
 
@@ -102,13 +131,40 @@ class EventIntelligenceEngine:
             )
 
         # ---------------------------------------------------------------
-        # STEP 1 — Entity enrichment
+        # STEP 1 — Transformer NER + ticker resolution
         # ---------------------------------------------------------------
 
-        enriched_articles = (
-            self.entity_resolver.enrich_articles(
-                articles
+        ner_enriched_articles = []
+
+        for article in articles:
+
+            text = (
+                f"{article.title} "
+                f"{article.raw_text}"
             )
+
+            model_entities = self.ner.extract(
+                text
+            )
+
+            article_with_ner = article.model_copy(
+                update={
+                    "entities": model_entities
+                }
+            )
+
+            enriched = (
+                self.entity_resolver.enrich_article(
+                    article_with_ner
+                )
+            )
+
+            ner_enriched_articles.append(
+                enriched
+            )
+
+        enriched_articles = (
+            ner_enriched_articles
         )
 
         # ---------------------------------------------------------------

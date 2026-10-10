@@ -35,12 +35,16 @@ data/processed/*
 *.csv.gz
 
 # Model checkpoints
+# Model checkpoints
 models/*
 !models/.gitkeep
+!models/registry.json
+
 *.pt
 *.pth
 *.bin
 *.safetensors
+
 
 # Temporary outputs
 outputs/

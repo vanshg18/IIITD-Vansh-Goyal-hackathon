@@ -1,0 +1,28 @@
+{
+  "sentiment": {
+    "model": "ProsusAI/finbert",
+    "role": "financial sentiment",
+    "status": "pretrained-baseline"
+  },
+  "entity_extraction": {
+    "model": "whataboutyou-ai/financial_bert",
+    "role": "financial named entity recognition",
+    "status": "pretrained"
+  },
+  "embeddings": {
+    "model": "BAAI/bge-small-en-v1.5",
+    "role": "financial semantic representation",
+    "status": "pretrained"
+  },
+"event_classification": {
+  "primary_model": "leonas5555/finnews-topic-single-classify",
+  "fallback_model": "MoritzLaurer/ModernBERT-base-zeroshot-v2.0",
+  "role": "confidence-aware financial event classification",
+  "status": "pretrained-router"
+},
+  "impact": {
+    "model": "heuristic",
+    "role": "event impact estimation",
+    "status": "temporary-baseline"
+  }
+}

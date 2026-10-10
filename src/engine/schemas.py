@@ -65,17 +65,29 @@ class SentimentResult(BaseModel):
 # ---------------------------------------------------------------------------
 # EVENT CLASSIFICATION
 # ---------------------------------------------------------------------------
-
 class EventClassification(BaseModel):
     """Event category predicted by the NLP layer."""
 
     model_config = ConfigDict(extra="forbid")
 
     label: str = Field(min_length=1)
-    confidence: float = Field(ge=0.0, le=1.0)
 
-    # Explainable evidence from the classifier.
-    evidence_terms: list[str] = Field(default_factory=list)
+    confidence: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
+    evidence_terms: list[str] = Field(
+        default_factory=list
+    )
+
+    # Name/version of the model producing this result.
+    model_name: str = "unknown"
+
+    # Full candidate-label score distribution when available.
+    scores: dict[str, float] = Field(
+        default_factory=dict
+    )
 
 
 # ---------------------------------------------------------------------------

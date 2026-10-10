@@ -1,0 +1,14 @@
+[
+  {"article_id": "art_001", "expected_label": "Monetary Policy"},
+  {"article_id": "art_002", "expected_label": "Monetary Policy"},
+  {"article_id": "art_003", "expected_label": "Regulatory"},
+  {"article_id": "art_004", "expected_label": "Regulatory"},
+  {"article_id": "art_005", "expected_label": "Regulatory"},
+  {"article_id": "art_006", "expected_label": "Product/Business"},
+  {"article_id": "art_007", "expected_label": "Supply Chain"},
+  {"article_id": "art_008", "expected_label": "Supply Chain"},
+  {"article_id": "art_009", "expected_label": "Earnings"},
+  {"article_id": "art_010", "expected_label": "Credit"},
+  {"article_id": "art_011", "expected_label": "Credit"},
+  {"article_id": "art_012", "expected_label": "Product/Business"}
+]

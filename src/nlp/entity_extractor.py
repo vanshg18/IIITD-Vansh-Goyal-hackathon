@@ -305,25 +305,57 @@ class FinancialEntityResolver:
         article: Article,
     ) -> Article:
         """
-        Return a copy of an Article with resolved entities/tickers.
+        Enrich an Article with portfolio-aware entity/ticker resolution.
+
+        Existing model-detected entities are preserved and combined with
+        portfolio-aware matching.
         """
 
+        combined_text = (
+            f"{article.title} "
+            f"{article.raw_text}"
+        )
+
         tickers = self.extract_tickers(
-            text=f"{article.title} {article.raw_text}",
+            text=combined_text,
             existing_tickers=article.tickers,
         )
 
-        entities = self.extract_entities(
-            text=f"{article.title} {article.raw_text}"
+        resolved_entities = self.extract_entities(
+            text=combined_text
         )
+
+        # Preserve entities already detected by a pretrained NER model.
+        entity_map: dict[str, Entity] = {}
+
+        for entity in article.entities:
+            key = normalize_company_name(
+                entity.name
+            )
+
+            if key:
+                entity_map[key] = entity
+
+        # Portfolio-aware resolution gets precedence because it gives
+        # us a canonical company name.
+        for entity in resolved_entities:
+            key = normalize_company_name(
+                entity.name
+            )
+
+            if key:
+                entity_map[key] = entity
 
         return article.model_copy(
             update={
                 "tickers": tickers,
-                "entities": entities,
+                "entities": list(
+                    entity_map.values()
+                ),
             }
         )
 
+    
     def enrich_articles(
         self,
         articles: list[Article],
