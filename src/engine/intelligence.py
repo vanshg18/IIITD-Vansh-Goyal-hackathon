@@ -25,6 +25,7 @@ from src.engine.corroboration import CorroborationEngine
 from src.engine.decay import TimeDecayEngine
 from src.engine.event_clustering import EventClusterer
 from src.engine.impact import ImpactEngine
+from src.engine.entity_merge import merge_entities
 from src.engine.schemas import (
     FinancialEvent,
     ImpactResult,
@@ -54,23 +55,6 @@ class EventIntelligenceEngine:
     """
     Main intelligence layer of EventPulse.
     """
-
-    @staticmethod
-    def _merge_entities(existing_entities, extracted_entities):
-        """Merge source-provided entities with NER detections without data loss."""
-        merged = []
-        seen = set()
-        for entity in list(existing_entities or []) + list(extracted_entities or []):
-            name = str(getattr(entity, "name", "") or "").strip()
-            entity_type = str(getattr(entity, "entity_type", "OTHER") or "OTHER")
-            if not name:
-                continue
-            key = (name.casefold(), entity_type)
-            if key in seen:
-                continue
-            seen.add(key)
-            merged.append(entity)
-        return merged
 
     def __init__(
         self,
@@ -182,7 +166,7 @@ class EventIntelligenceEngine:
             )
 
             model_entities = self.ner.extract(text)
-            merged_entities = self._merge_entities(
+            merged_entities = merge_entities(
                 article.entities,
                 model_entities,
             )
