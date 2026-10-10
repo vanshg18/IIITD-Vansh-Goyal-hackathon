@@ -29,6 +29,11 @@ def main() -> int:
         "--dataset-output",
         default="data/processed/market_reaction_training.csv",
     )
+    parser.add_argument(
+        "--benchmark-tickers",
+        default="",
+        help="Optional peer-universe tickers for the equal-weight benchmark, e.g. AAPL,MSFT,NVDA,AMZN,JPM.",
+    )
     parser.add_argument("--model-output", default="models/impact_model.joblib")
     parser.add_argument(
         "--metrics-output",
@@ -40,6 +45,11 @@ def main() -> int:
         events_path=args.events,
         prices_path=args.prices,
         output_csv=args.dataset_output,
+        benchmark_tickers={
+            item.strip().upper()
+            for item in args.benchmark_tickers.split(",")
+            if item.strip()
+        } or None,
     )
     report = train_market_impact_model(
         dataset_csv=args.dataset_output,

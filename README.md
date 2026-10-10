@@ -107,7 +107,7 @@ python -m src.ml.score_historical_news --input data/raw/nasdaq_exteral_data.csv 
 2. Label those structured events against historical prices. The price input may be a long CSV, a directory of per-ticker CSVs, or a ZIP of per-ticker CSVs:
 
 ~~~bash
-python -m src.ml.train_market_impact --prices data/raw/full_history.zip
+python -m src.ml.train_market_impact --prices data/raw/full_history.zip --benchmark-tickers AAPL,MSFT,NVDA,AMZN,JPM
 ~~~
 
 3. Inspect data/processed/impact_model_metrics.json. The artifact is only enabled for live inference if its validation MAE beats the training-median baseline. The final test block is chronological and is not used to choose acceptance.

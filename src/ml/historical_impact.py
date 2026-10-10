@@ -217,6 +217,7 @@ def build_market_reaction_dataset(
     events_path: str | Path,
     prices_path: str | Path,
     output_csv: str | Path,
+    benchmark_tickers: set[str] | None = None,
 ) -> pd.DataFrame:
     """
     Expand each structured event into one row per matched ticker, label it with
@@ -234,7 +235,21 @@ def build_market_reaction_dataset(
     if not event_tickers:
         raise ValueError("The event JSONL contains no tickers/affected_assets.")
 
-    prices = load_price_panel(prices_path, tickers=event_tickers)
+    prices_path_obj = Path(prices_path)
+    peer_tickers = {ticker.upper() for ticker in benchmark_tickers} if benchmark_tickers else set()
+    price_universe = event_tickers | peer_tickers
+
+    # A long CSV is usually already the user's chosen price panel, so load all
+    # of it by default and use all available peers. For a directory/ZIP (often
+    # thousands of per-ticker files), restrict I/O to the event and requested
+    # peer universe instead of reading every constituent.
+    if prices_path_obj.is_dir() or prices_path_obj.suffix.lower() == ".zip":
+        prices = load_price_panel(prices_path_obj, tickers=price_universe)
+    else:
+        prices = load_price_panel(
+            prices_path_obj,
+            tickers=price_universe if benchmark_tickers else None,
+        )
     ticker_frames: dict[str, pd.DataFrame] = {}
     for ticker, group in prices.groupby("ticker", sort=False):
         group = group.sort_values("date").copy()
