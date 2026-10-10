@@ -13,8 +13,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: "pip"
       - name: Install minimal ingestion dependencies
         run: python -m pip install "pydantic>=2,<3" requests python-dotenv pytest
       - name: Run network-independent ingestion tests
-        run: pytest -q tests/test_ingestion.py tests/test_live_ingestion.py
+        run: PYTHONPATH=. pytest -q tests/test_ingestion.py tests/test_live_ingestion.py
