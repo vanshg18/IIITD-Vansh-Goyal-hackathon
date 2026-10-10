@@ -1,44 +1,105 @@
-# EventPulse - S&P Global & Crisil Campus Hackathon
+# EventPulse — S&P Global & Crisil Campus Hackathon
 
-> From Headlines → Events → Impact → Action
+> **From Headlines → Events → Impact → Action**
 
-## Candidate
+EventPulse converts unstructured financial news and corporate disclosures into structured, explainable event signals. Signals can feed a constrained mock-index rebalancer (Module A) and a synthetic banking portfolio stress tester (Module B).
 
-**Candidate Name:** Vansh Goyal  
-**College / Campus:** IIIT Delhi
+## Current implementation
 
-## Project Overview
+- **Ingestion:** GDELT DOC public news API, SEC EDGAR current 8-K filings, and optional Alpha Vantage news.
+- **Traceability:** normalized article IDs, source names, source URLs, timestamps, ticker metadata when available, and JSONL persistence.
+- **NLP:** FinBERT sentiment, a finance-topic/zero-shot event classifier router, entity/ticker resolution, and semantic clustering.
+- **Impact:** the current 1–10 impact score is an interpretable heuristic baseline. It is **not yet trained or calibrated against historical market reactions**.
+- **Reproducibility:** synthetic fixtures remain available for unit tests; live mode never silently replaces missing live data with synthetic data.
 
-EventPulse is an AI/NLP-driven financial risk engine that converts
-unstructured financial information into structured, explainable financial
-events and downstream portfolio signals.
+## Setup
 
-Instead of independently reacting to every headline, the system identifies
-underlying events, extracts sentiment and event type, estimates financial
-impact, evaluates confidence and corroboration, applies novelty and time
-decay, and maps the resulting signal to portfolio exposures.
+Use Python 3.11 or 3.12 in a virtual environment:
 
-The engine supports two downstream applications:
+~~~bash
+python -m venv .venv
+# Windows PowerShell
+.venv\Scripts\Activate.ps1
+# macOS/Linux
+# source .venv/bin/activate
 
-1. Dynamic Index Rebalancing
-2. Strategic Portfolio Stress Testing
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+~~~
 
-## Architecture
+Copy .env.example to .env. For SEC EDGAR, replace SEC_USER_AGENT with a descriptive application name and a real contact email, for example:
 
-```text
-Data Sources
-     ↓
-Ingestion
-     ↓
-Preprocessing
-     ↓
-NLP / Event Extraction
-     ↓
-Financial Event Engine
-     ↓
-Signal Generation
-     ├── Module A: Index Rebalancing
-     └── Module B: Portfolio Stress Testing
-     ↓
-Dashboard / API
-=======
+~~~dotenv
+SEC_USER_AGENT=EventPulse/1.0 Your Name your.email@example.com
+~~~
+
+The optional Alpha Vantage feed is only enabled when ALPHAVANTAGE_API_KEY is set. The GDELT adapter needs no API key. SEC requests identify the application through the configured User-Agent.
+
+## Run ingestion
+
+Fetch real news and public SEC filings, persist new records to data/processed/live_articles.jsonl, and report every source's status:
+
+~~~bash
+python -m src.ingestion.run_ingestion --mode live --limit 20 --timespan 1day
+~~~
+
+Try a shorter GDELT window or custom query:
+
+~~~bash
+python -m src.ingestion.run_ingestion --mode live --limit 10 --timespan 6h --query '("stock market" OR earnings OR "central bank")'
+~~~
+
+Run offline synthetic fixtures explicitly:
+
+~~~bash
+python -m src.ingestion.run_ingestion --mode demo --limit 5 --output data/processed/demo_articles.jsonl
+~~~
+
+To require every configured source to work, add --require-all-sources. Without it, a failed source is reported and other working sources can continue. If no live articles are fetched, the command exits non-zero; it does not fall back to demo inputs.
+
+## Run end-to-end NLP on live records
+
+This command fetches live articles, appends de-duplicated raw articles to JSONL, runs the pretrained intelligence pipeline, and writes the most recent structured events:
+
+~~~bash
+python -m src.engine.run_live_intelligence --limit 10 --timespan 1day
+~~~
+
+Outputs are stored locally under data/processed/ (ignored by Git). Transformer weights are downloaded by the NLP libraries when required. A complete first run can take longer than later runs.
+
+## Canonical signal output
+
+Each structured event includes its event timestamp and source provenance, title/text, tickers, event classification and confidence, sentiment in [-1, 1], impact score in [1, 10], novelty/corroboration/time-decay metadata, and cluster identifiers.
+
+Example commands for the existing synthetic NLP path:
+
+~~~bash
+python -m src.engine.run_intelligence_demo
+python -m src.nlp.run_pretrained_demo
+~~~
+
+## Testing
+
+The ingestion tests are network-independent and mock GDELT/SEC API responses:
+
+~~~bash
+pytest -q tests/test_ingestion.py tests/test_live_ingestion.py
+~~~
+
+Run the complete suite after installing all project dependencies:
+
+~~~bash
+pytest -q
+~~~
+
+## Important modeling limitations
+
+- FinBERT linguistic sentiment is not the same as a forecast of price direction.
+- The current impact score is a severity/confidence heuristic; do not interpret it as a calibrated probability or expected loss.
+- Real-data classification quality must be measured on independently labeled real headlines. The small synthetic fixture benchmark is a smoke test, not evidence of real-world accuracy.
+- A historical impact model should be trained with time-ordered splits and a documented news-availability cutoff to prevent look-ahead leakage.
+- Module B uses a synthetic banking portfolio and explicit scenario assumptions. It is a stress-test simulation, not a valuation of a real bank.
+
+## Data and responsible use
+
+Do not commit API keys, private customer data, model checkpoints, or large downloaded datasets. Follow each data provider's terms, rate limits, and attribution requirements. This repository does not contain proprietary S&P Global or Crisil data.
