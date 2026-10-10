@@ -18,4 +18,4 @@ jobs:
       - name: Check Python syntax
         run: PYTHONPATH=. python -m compileall -q src tests
       - name: Run network-independent tests
-        run: PYTHONPATH=. pytest -q tests/test_ingestion.py tests/test_live_ingestion.py tests/test_historical_impact.py tests/test_downstream_modules.py tests/test_entity_merge.py tests/test_semantic_clustering.py tests/test_live_ticker_universe.py tests/test_live_pipeline.py tests/test_event_intelligence.py tests/test_api.py
+        run: PYTHONPATH=. pytest -q tests/test_ingestion.py tests/test_live_ingestion.py tests/test_historical_impact.py tests/test_downstream_modules.py tests/test_entity_merge.py tests/test_semantic_clustering.py tests/test_live_ticker_universe.py tests/test_live_pipeline.py tests/test_event_intelligence.py tests/test_api.py tests/test_historical_news_sampling.py
