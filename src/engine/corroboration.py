@@ -11,6 +11,7 @@ distinct source names.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from math import exp
 
 from src.engine.schemas import Article
@@ -29,6 +30,28 @@ class CorroborationEngine:
     """
     Calculate confidence reinforcement from independent sources.
     """
+
+    @staticmethod
+    def articles_available_as_of(
+        articles: list[Article],
+        timestamp: datetime,
+    ) -> list[Article]:
+        """Return only reports observable by the given event timestamp.
+
+        Historical impact features must not include later reports in the same
+        semantic cluster, otherwise cluster size and source corroboration leak
+        information from the future into the model inputs.
+        """
+        def as_utc(value: datetime) -> datetime:
+            if value.tzinfo is None:
+                return value.replace(tzinfo=timezone.utc)
+            return value.astimezone(timezone.utc)
+
+        cutoff = as_utc(timestamp)
+        return [
+            article for article in articles
+            if as_utc(article.timestamp) <= cutoff
+        ]
 
     @staticmethod
     def calculate(

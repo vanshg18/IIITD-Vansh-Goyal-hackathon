@@ -70,6 +70,39 @@ def test_novelty_affects_impact():
     assert first.score > repeated.score
 
 
+def test_corroboration_uses_only_articles_available_at_event_time():
+    timestamp = datetime(2026, 10, 10, 10, 0, tzinfo=timezone.utc)
+    articles = [
+        Article(
+            article_id="before",
+            timestamp=timestamp.replace(minute=0),
+            source={"name": "Source A", "source_type": "news"},
+            title="Initial report",
+            raw_text="Initial report",
+        ),
+        Article(
+            article_id="same_time",
+            timestamp=timestamp,
+            source={"name": "Source B", "source_type": "news"},
+            title="Second report available at timestamp",
+            raw_text="Second report available at timestamp",
+        ),
+        Article(
+            article_id="future",
+            timestamp=timestamp.replace(hour=11),
+            source={"name": "Source C", "source_type": "news"},
+            title="Later follow-up",
+            raw_text="Later follow-up",
+        ),
+    ]
+
+    available = CorroborationEngine.articles_available_as_of(articles, timestamp)
+
+    assert [article.article_id for article in available] == ["before", "same_time"]
+    result = CorroborationEngine.calculate(available, base_confidence=0.8)
+    assert result.unique_source_count == 2
+
+
 def test_corroboration_counts_unique_sources():
 
     articles = [
