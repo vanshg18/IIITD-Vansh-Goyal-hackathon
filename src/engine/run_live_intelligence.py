@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from src.engine.intelligence import EventIntelligenceEngine
 from src.ingestion import IngestionPipeline, build_live_sources
 from src.ingestion.storage import append_articles_jsonl, write_models_jsonl
+from src.module_a.rebalancer import load_index_portfolio
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -54,7 +55,12 @@ def main() -> int:
     appended = append_articles_jsonl(articles, articles_path)
     print(f"Persisted {appended} new raw articles to {articles_path.resolve()}")
 
-    engine = EventIntelligenceEngine(use_pretrained=True)
+    # Live news must resolve against the real-ticker index universe. The
+    # default fictional portfolio is retained for the synthetic demo command.
+    engine = EventIntelligenceEngine(
+        portfolio=load_index_portfolio(),
+        use_pretrained=True,
+    )
     events = engine.process(articles)
     events_path = Path(args.events_output)
     if not events_path.is_absolute():
