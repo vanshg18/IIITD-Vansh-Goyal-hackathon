@@ -92,6 +92,28 @@ Run the complete suite after installing all project dependencies:
 pytest -q
 ~~~
 
+## Train an impact model from historical data
+
+The historical model uses a market-observable target: the magnitude of a ticker's next-session return relative to the equal-weight return of the loaded comparison universe. It trains on EventPulse outputs, not hand-written synthetic impact labels. The resulting score is a relative 1–10 rank; it is not a probability or causal claim.
+
+For a practical first experiment, use a small ticker universe and a few thousand news records. FNSPID is one possible public starting point; fetch data from its upstream repository (https://github.com/Zdong104/FNSPID_Financial_News_Dataset) and verify the dataset license/terms before use. Keep raw downloads outside Git, e.g. under data/raw/.
+
+1. Score historical news with the same FinBERT and event router used in EventPulse:
+
+~~~bash
+python -m src.ml.score_historical_news --input data/raw/nasdaq_exteral_data.csv --tickers AAPL,MSFT,NVDA,AMZN,JPM --limit 2000 --device 0
+~~~
+
+2. Label those structured events against historical prices. The price input may be a long CSV, a directory of per-ticker CSVs, or a ZIP of per-ticker CSVs:
+
+~~~bash
+python -m src.ml.train_market_impact --prices data/raw/full_history.zip
+~~~
+
+3. Inspect data/processed/impact_model_metrics.json. The artifact is only enabled for live inference if its validation MAE beats the training-median baseline. The final test block is chronological and is not used to choose acceptance.
+
+The current implementation uses daily close-to-close returns. It treats features as end-of-day information and aligns weekend/holiday news to the latest earlier close. Daily data cannot precisely identify intraday market reaction, so this is a proxy, not causal attribution. For a larger or serious financial evaluation, prefer timestamped intraday prices and a longer date range. If the model does not beat the baseline, EventPulse deliberately continues to use the transparent heuristic impact score.
+
 ## Important modeling limitations
 
 - FinBERT linguistic sentiment is not the same as a forecast of price direction.
