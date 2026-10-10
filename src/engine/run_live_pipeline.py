@@ -316,6 +316,20 @@ def run_live_cycle(
     engine = engine_factory()
     events = engine.process(fresh_articles, reference_time=cycle_time)
 
+    # Compute BOTH downstream outcomes before persisting any simulated state.
+    # If Module B raises, the run will fail without already applying Module A's
+    # weights, so retrying the same unprocessed article cannot double-rebalance.
+    base_portfolio = load_index_portfolio()
+    portfolio_state_path = _resolve_path(portfolio_state_output)
+    restored_portfolio = load_portfolio_with_state(base_portfolio, portfolio_state_path)
+    rebalancer = SentimentRebalancer(portfolio=restored_portfolio)
+    rebalance_result = rebalancer.rebalance(events, as_of=cycle_time)
+
+    stress_tester = PortfolioStressTester()
+    stress_results = stress_tester.evaluate_events(events)
+
+    # All inference/downstream calculations completed successfully. Persist
+    # snapshots and histories only now.
     latest_events_path = _resolve_path(latest_events_output)
     events_history_path = _resolve_path(events_history_output)
     written_events = write_models_jsonl(events, latest_events_path)
@@ -324,13 +338,6 @@ def run_live_cycle(
         f"Structured events: {len(events)}; latest snapshot={latest_events_path}; "
         f"new event history records={appended_events}"
     )
-
-    # Module A — restore prior simulated weights, then apply fresh signals only.
-    base_portfolio = load_index_portfolio()
-    portfolio_state_path = _resolve_path(portfolio_state_output)
-    restored_portfolio = load_portfolio_with_state(base_portfolio, portfolio_state_path)
-    rebalancer = SentimentRebalancer(portfolio=restored_portfolio)
-    rebalance_result = rebalancer.rebalance(events, as_of=cycle_time)
 
     save_portfolio_state(
         portfolio_id=rebalance_result.portfolio_id,
@@ -355,9 +362,6 @@ def run_live_cycle(
         f"state={portfolio_state_path}"
     )
 
-    # Module B — only configured high-impact event/scenario matches fire.
-    stress_tester = PortfolioStressTester()
-    stress_results = stress_tester.evaluate_events(events)
     stress_latest_path = _resolve_path(stress_latest_output)
     write_models_jsonl([result.to_dict() for result in stress_results], stress_latest_path)
     appended_stresses = append_unique_jsonl(
