@@ -22,6 +22,24 @@ from rapidfuzz import fuzz
 from src.engine.schemas import Article, Entity, Portfolio
 
 
+# Human/company aliases seen in financial reporting. Aliases are constrained to
+# the portfolio universe; they are not treated as arbitrary ticker patterns.
+PORTFOLIO_COMPANY_ALIASES: dict[str, tuple[str, ...]] = {
+    "NVDA": ("NVIDIA Corporation",),
+    "AAPL": ("Apple Inc.",),
+    "MSFT": ("Microsoft Corporation",),
+    "AMZN": ("Amazon.com", "Amazon.com Inc."),
+    "GOOGL": ("Alphabet", "Alphabet Inc.", "Google"),
+    "AVGO": ("Broadcom Inc.",),
+    "JPM": ("JPMorgan", "JP Morgan", "JP Morgan Chase", "JPMorgan Chase & Co."),
+    "LLY": ("Eli Lilly and Company",),
+    "META": ("Meta", "Facebook", "Facebook parent Meta"),
+    "TSLA": ("Tesla Inc.", "Tesla Motors"),
+    "XOM": ("Exxon", "ExxonMobil", "Exxon Mobil Corporation"),
+    "WMT": ("Walmart Inc.", "Wal-Mart"),
+}
+
+
 @dataclass(frozen=True)
 class AssetEntity:
     """Internal representation of a portfolio entity."""
@@ -115,6 +133,11 @@ class FinancialEntityResolver:
                 normalize_text(asset.name),
                 normalize_text(asset.ticker),
             }
+            # Add curated aliases for common issuer-name variants used by news
+            # publishers and SEC/company disclosures.
+            for alias in PORTFOLIO_COMPANY_ALIASES.get(asset.ticker.upper(), ()):
+                aliases.add(normalize_text(alias))
+                aliases.add(normalize_company_name(alias))
 
             # Add compact aliases where the company name contains spaces.
             compact = name_normalized.replace(" ", "")
@@ -140,8 +163,10 @@ class FinancialEntityResolver:
 
         for asset in self.assets:
             self.name_to_ticker[normalize_company_name(asset.name)] = asset.ticker
+            self.name_to_ticker[normalize_text(asset.ticker)] = asset.ticker
             for alias in asset.aliases:
                 self.alias_to_asset[alias] = asset
+                self.name_to_ticker[normalize_company_name(alias)] = asset.ticker
 
     def extract_tickers(
         self,
