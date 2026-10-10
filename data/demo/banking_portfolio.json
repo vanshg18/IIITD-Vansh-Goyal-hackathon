@@ -1,0 +1,71 @@
+{
+  "portfolio_id": "synthetic_wholesale_bank_001",
+  "name": "Synthetic Wholesale Banking Portfolio (USD; illustrative only)",
+  "total_assets": 1000000000.0,
+  "currency": "USD",
+  "positions": [
+    {
+      "position_id": "loan_tech",
+      "name": "Technology and software corporate loans",
+      "asset_class": "loans",
+      "sector": "Technology",
+      "market_value": 160000000.0,
+      "base_default_rate": 0.025
+    },
+    {
+      "position_id": "loan_cre",
+      "name": "Commercial real estate loans",
+      "asset_class": "loans",
+      "sector": "Real Estate",
+      "market_value": 180000000.0,
+      "base_default_rate": 0.04
+    },
+    {
+      "position_id": "loan_industrials",
+      "name": "Industrial and transport corporate loans",
+      "asset_class": "loans",
+      "sector": "Industrials",
+      "market_value": 120000000.0,
+      "base_default_rate": 0.02
+    },
+    {
+      "position_id": "loan_consumer",
+      "name": "Consumer and diversified wholesale credit",
+      "asset_class": "loans",
+      "sector": "Consumer",
+      "market_value": 110000000.0,
+      "base_default_rate": 0.03
+    },
+    {
+      "position_id": "gov_bonds",
+      "name": "Government bond holdings",
+      "asset_class": "government_bonds",
+      "sector": "Government Bonds",
+      "market_value": 200000000.0,
+      "modified_duration": 5.5
+    },
+    {
+      "position_id": "corp_bonds",
+      "name": "Investment-grade corporate bond holdings",
+      "asset_class": "corporate_bonds",
+      "sector": "Corporate Bonds",
+      "market_value": 130000000.0,
+      "modified_duration": 4.0,
+      "spread_duration": 3.8
+    },
+    {
+      "position_id": "equities",
+      "name": "Listed equity and strategic investment holdings",
+      "asset_class": "equities",
+      "sector": "Technology",
+      "market_value": 60000000.0
+    },
+    {
+      "position_id": "cash",
+      "name": "Cash and near-cash assets",
+      "asset_class": "cash",
+      "sector": "Cash",
+      "market_value": 40000000.0
+    }
+  ]
+}

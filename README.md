@@ -67,6 +67,16 @@ python -m src.engine.run_live_intelligence --limit 10 --timespan 1day
 
 Outputs are stored locally under data/processed/ (ignored by Git). Transformer weights are downloaded by the NLP libraries when required. A complete first run can take longer than later runs.
 
+## Downstream modules
+
+### Module A — sentiment-responsive mock-index rebalancing
+
+The separate Module A portfolio contains 12 real large-cap tickers associated with the S&P Global 100 constituent universe. Starting weights are equal-weighted for the simulation and **are not official index weights**. The rebalancer applies sentiment/impact signals, deduplicates repeat reports by cluster, normalizes weights, enforces configurable minimum/maximum asset weights, and caps one-way turnover. Unmatched tickers are reported rather than silently included.
+
+### Module B — synthetic wholesale-bank stress testing
+
+Module B uses the explicitly synthetic portfolio in data/demo/banking_portfolio.json. High-impact event classes trigger named scenario rules from data/demo/bank_stress_scenarios.json. The model applies sector/equity shocks, duration-based bond repricing, spread widening, and incremental loan default-rate assumptions, then calculates before/after value and position-level loss attribution. Scenario inputs are assumptions for stress testing, not estimates of actual bank holdings or forecasts.
+
 ## Canonical signal output
 
 Each structured event includes its event timestamp and source provenance, title/text, tickers, event classification and confidence, sentiment in [-1, 1], impact score in [1, 10], novelty/corroboration/time-decay metadata, and cluster identifiers.
