@@ -69,7 +69,7 @@ def test_latest_events_history_and_summary(tmp_path, monkeypatch):
     assert history.json()["events"][0]["event_id"] == "event_2"
     assert summary.json()["event_count"] == 2
     assert summary.json()["event_type_counts"] == {"Credit": 1, "Earnings": 1}
-    assert summary.json()["mean_sentiment"] == 0.05
+    assert abs(summary.json()["mean_sentiment"] - 0.05) < 1e-9
     assert summary.json()["mean_impact"] == 6.5
     assert summary.json()["stress_test_count"] == 1
 
