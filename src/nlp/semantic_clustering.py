@@ -12,8 +12,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 
 from sklearn.metrics.pairwise import cosine_similarity
+
+if TYPE_CHECKING:
+    from src.nlp.finance_embeddings import FinanceEmbedder
 
 from src.engine.schemas import Article
 from src.nlp.event_classifier import (
