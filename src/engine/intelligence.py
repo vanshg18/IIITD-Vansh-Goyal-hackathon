@@ -219,22 +219,20 @@ class EventIntelligenceEngine:
                 key=lambda article: article.timestamp
             )
 
-            # Independent sources reporting the same event.
-            provisional_corroboration = (
-                self.corroboration_engine.calculate(
-                    articles=cluster_articles,
-                    base_confidence=0.0,
+            for article in cluster_articles:
+                # Use only reports available at this article's publication
+                # time. Future reports must not inflate this event's novelty,
+                # corroboration, cluster-size feature, or impact prediction.
+                observed_cluster_articles = (
+                    self.corroboration_engine.articles_available_as_of(
+                        cluster_articles,
+                        article.timestamp,
+                    )
                 )
-            )
-
-            source_count = (
-                provisional_corroboration
-                .unique_source_count
-            )
-
-            for index, article in enumerate(
-                cluster_articles
-            ):
+                observed_cluster_size = max(
+                    1,
+                    len(observed_cluster_articles),
+                )
 
                 text = (
                     f"{article.title} "
@@ -271,9 +269,7 @@ class EventIntelligenceEngine:
                 # Novelty
                 # -------------------------------------------------------
 
-                novelty = 1.0 / (
-                    1.0 + index
-                )
+                novelty = 1.0 / observed_cluster_size
 
                 # -------------------------------------------------------
                 # Corroboration
@@ -281,7 +277,7 @@ class EventIntelligenceEngine:
 
                 corroboration = (
                     self.corroboration_engine.calculate(
-                        articles=cluster_articles,
+                        articles=observed_cluster_articles,
                         base_confidence=(
                             sentiment.confidence
                             + event_prediction.confidence
@@ -331,8 +327,8 @@ class EventIntelligenceEngine:
                                 event_confidence=event_prediction.confidence,
                                 event_type=event_prediction.label,
                                 tickers=article.tickers,
-                                cluster_size=len(cluster_articles),
-                                corroboration_count=source_count,
+                                cluster_size=observed_cluster_size,
+                                corroboration_count=corroboration.unique_source_count,
                                 novelty=novelty,
                                 decay=decay,
                             )
@@ -395,9 +391,7 @@ class EventIntelligenceEngine:
                     ),
                     affected_assets=article.tickers,
                     cluster_id=cluster.cluster_id,
-                    cluster_size=len(
-                        cluster_articles
-                    ),
+                    cluster_size=observed_cluster_size,
                 )
 
                 results.append(result)
