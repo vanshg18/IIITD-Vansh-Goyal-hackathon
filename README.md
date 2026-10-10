@@ -57,15 +57,31 @@ python -m src.ingestion.run_ingestion --mode demo --limit 5 --output data/proces
 
 To require every configured source to work, add --require-all-sources. Without it, a failed source is reported and other working sources can continue. If no live articles are fetched, the command exits non-zero; it does not fall back to demo inputs.
 
-## Run end-to-end NLP on live records
+## Run the complete live risk-engine cycle
 
-This command fetches live articles, appends de-duplicated raw articles to JSONL, runs the pretrained intelligence pipeline, and writes the most recent structured events:
+This is the primary real-data command. It fetches from GDELT and SEC EDGAR (plus Alpha Vantage when configured), runs the pretrained intelligence pipeline on not-yet-processed articles, then updates Module A and triggers Module B stress scenarios where the signal qualifies:
+
+~~~bash
+python -m src.engine.run_live_pipeline --limit 10 --timespan 1day
+~~~
+
+Outputs are stored under `data/processed/` (ignored by Git):
+
+- `live_articles.jsonl`: deduplicated raw article archive.
+- `processed_articles.json`: fingerprints of items whose NLP and downstream cycle completed. This is separate from raw archival so items previously saved by the ingestion-only command can still be processed.
+- `latest_events.jsonl` and `events_history.jsonl`: canonical financial event signals.
+- `latest_rebalance.json`, `rebalance_history.jsonl`, and `index_portfolio_state.json`: Module A outputs and persistent simulated weights.
+- `latest_stress_results.jsonl` and `stress_results_history.jsonl`: Module B outcomes and history.
+
+Overlapping news windows do not reapply already processed articles, and the index simulation state persists across runs. If you intentionally want to start the mock index from equal weights, back up and remove `index_portfolio_state.json`; do not delete the processed registry unless you also intend to reprocess old stories.
+
+Transformer weights are downloaded by the NLP libraries on the first full run, so that run can take longer. Live provider connectivity is still dependent on network access and valid source configuration.
+
+The lower-level NLP-only command remains available when you only want to emit event signals:
 
 ~~~bash
 python -m src.engine.run_live_intelligence --limit 10 --timespan 1day
 ~~~
-
-Outputs are stored locally under data/processed/ (ignored by Git). Transformer weights are downloaded by the NLP libraries when required. A complete first run can take longer than later runs.
 
 ## Downstream modules
 

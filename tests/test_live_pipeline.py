@@ -9,6 +9,7 @@ from src.engine.run_live_pipeline import (
     run_live_cycle,
 )
 from src.engine.schemas import Article, FinancialEvent
+from src.ingestion.storage import append_articles_jsonl
 from src.module_a.rebalancer import load_index_portfolio
 
 
@@ -85,6 +86,7 @@ def output_paths(tmp_path):
         "rebalance_latest_output": tmp_path / "latest_rebalance.json",
         "rebalance_history_output": tmp_path / "rebalance_history.jsonl",
         "portfolio_state_output": tmp_path / "index_state.json",
+        "processed_registry_output": tmp_path / "processed_articles.json",
         "stress_latest_output": tmp_path / "latest_stress.jsonl",
         "stress_history_output": tmp_path / "stress_history.jsonl",
     }
@@ -112,6 +114,8 @@ def test_live_cycle_runs_modules_persists_weights_and_skips_duplicate_articles(t
     assert first["events"] == 1
     assert first["stress_tests"] == 1
     assert engine.calls == 1
+    registry = json.loads(outputs["processed_registry_output"].read_text())
+    assert len(registry["processed_fingerprints"]) == 1
 
     state_before_duplicate = json.loads(outputs["portfolio_state_output"].read_text())
     assert abs(sum(state_before_duplicate["weights"].values()) - 1.0) < 1e-6
@@ -139,6 +143,32 @@ def test_live_cycle_runs_modules_persists_weights_and_skips_duplicate_articles(t
     assert outputs["portfolio_state_output"].read_text() == state_text
     assert len(outputs["events_history_output"].read_text().splitlines()) == 1
     assert len(outputs["stress_history_output"].read_text().splitlines()) == 1
+
+
+
+def test_article_archived_by_ingestion_only_is_still_processed(tmp_path):
+    now = datetime.now(timezone.utc)
+    article = make_article(now - timedelta(minutes=5))
+    event = make_event(article.timestamp)
+    outputs = output_paths(tmp_path)
+
+    # Simulate running src.ingestion.run_ingestion earlier: the raw record is
+    # archived, but the dedicated processed registry does not contain it.
+    append_articles_jsonl([article], outputs["articles_output"])
+    engine = FakeEngine([event])
+    summary = run_live_cycle(
+        FakePipeline([article]),
+        engine_factory=lambda: engine,
+        reference_time=now,
+        **outputs,
+    )
+
+    assert summary["exit_code"] == 0
+    assert summary["new_articles"] == 1
+    assert summary["archived_articles"] == 0
+    assert engine.calls == 1
+    registry = json.loads(outputs["processed_registry_output"].read_text())
+    assert len(registry["processed_fingerprints"]) == 1
 
 
 def test_portfolio_state_restores_prior_weights(tmp_path):
@@ -173,3 +203,4 @@ def test_empty_live_fetch_does_not_fall_back_to_synthetic_articles(tmp_path):
     assert summary["events"] == 0
     assert not outputs["articles_output"].exists()
     assert not outputs["portfolio_state_output"].exists()
+    assert not outputs["processed_registry_output"].exists()
