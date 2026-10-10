@@ -1,0 +1,61 @@
+[
+  {
+    "scenario_id": "geopolitical_supply_disruption",
+    "name": "Geopolitical / Supply Disruption Stress",
+    "description": "Illustrative broad-equity, rate, spread and sector-default shocks triggered by severe geopolitical or supply-chain events.",
+    "event_types": ["Geopolitical", "Supply Chain"],
+    "minimum_impact": 8.0,
+    "shocks": {
+      "asset_returns": {"equities": -0.10},
+      "sector_returns": {"Technology": -0.08, "Energy": 0.12},
+      "interest_rate_change": 0.02,
+      "credit_spread_change": 0.015,
+      "default_rate_increase": 0.025,
+      "default_rate_increase_by_sector": {"Real Estate": 0.04, "Technology": 0.03, "Industrials": 0.03, "Consumer": 0.025}
+    }
+  },
+  {
+    "scenario_id": "monetary_policy_shock",
+    "name": "Unexpected Monetary Tightening",
+    "description": "Illustrative +200 basis-point rates shock, corporate spread widening and equity repricing.",
+    "event_types": ["Monetary Policy"],
+    "minimum_impact": 7.0,
+    "shocks": {
+      "asset_returns": {"equities": -0.06},
+      "sector_returns": {"Technology": -0.05, "Consumer Discretionary": -0.04, "Financials": -0.02},
+      "interest_rate_change": 0.02,
+      "credit_spread_change": 0.01,
+      "default_rate_increase": 0.015,
+      "default_rate_increase_by_sector": {"Real Estate": 0.025, "Technology": 0.02, "Industrials": 0.015, "Consumer": 0.02}
+    }
+  },
+  {
+    "scenario_id": "credit_deterioration",
+    "name": "Broad Credit Deterioration",
+    "description": "Illustrative loan default-rate and corporate-credit-spread stress associated with severe credit or regulatory events.",
+    "event_types": ["Credit", "Regulatory"],
+    "minimum_impact": 8.0,
+    "shocks": {
+      "asset_returns": {"equities": -0.12},
+      "sector_returns": {"Technology": -0.08, "Financials": -0.10, "Consumer Discretionary": -0.08},
+      "interest_rate_change": 0.005,
+      "credit_spread_change": 0.03,
+      "default_rate_increase": 0.05,
+      "default_rate_increase_by_sector": {"Real Estate": 0.08, "Technology": 0.06, "Industrials": 0.05, "Consumer": 0.06}
+    }
+  },
+  {
+    "scenario_id": "market_crash",
+    "name": "Severe Market Drawdown",
+    "description": "Illustrative broad-equity drawdown and spread-widening scenario for exceptionally high-impact market events.",
+    "event_types": ["Market"],
+    "minimum_impact": 9.0,
+    "shocks": {
+      "asset_returns": {"equities": -0.15},
+      "sector_returns": {"Technology": -0.08, "Consumer Discretionary": -0.08},
+      "interest_rate_change": -0.01,
+      "credit_spread_change": 0.025,
+      "default_rate_increase": 0.03
+    }
+  }
+]

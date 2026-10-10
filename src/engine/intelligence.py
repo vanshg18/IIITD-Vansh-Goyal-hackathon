@@ -17,6 +17,9 @@ The output is a list of canonical FinancialEvent objects.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from dataclasses import replace
+from pathlib import Path
+import warnings
 
 from src.engine.corroboration import CorroborationEngine
 from src.engine.decay import TimeDecayEngine
@@ -44,6 +47,7 @@ from src.nlp.event_router import (
 from src.nlp.semantic_clustering import (
     SemanticEventClusterer,
 )
+from src.ml.historical_impact import MarketReactionImpactModel
 
 
 class EventIntelligenceEngine:
@@ -107,6 +111,23 @@ class EventIntelligenceEngine:
         )
 
         self.impact_engine = ImpactEngine()
+        model_path = (
+            Path(__file__).resolve().parents[2]
+            / "models"
+            / "impact_model.joblib"
+        )
+        try:
+            self.market_impact_model = (
+                MarketReactionImpactModel.load_if_accepted(model_path)
+            )
+        except Exception as exc:
+            # A missing or incompatible optional artifact must never prevent
+            # the baseline engine from running.
+            self.market_impact_model = None
+            warnings.warn(
+                f"Historical impact model could not be loaded; using heuristic baseline: {exc}",
+                RuntimeWarning,
+            )
 
         self.corroboration_engine = (
             CorroborationEngine()
@@ -295,6 +316,36 @@ class EventIntelligenceEngine:
                         novelty=novelty,
                     )
                 )
+
+                # Replace only the impact score when a historically trained
+                # model passed the temporal validation baseline. Keep the
+                # transparent heuristic's confidence until confidence is
+                # independently calibrated.
+                if self.market_impact_model is not None:
+                    try:
+                        market_estimate = (
+                            self.market_impact_model.predict_event(
+                                sentiment_score=sentiment.score,
+                                sentiment_confidence=sentiment.confidence,
+                                event_confidence=event_prediction.confidence,
+                                event_type=event_prediction.label,
+                                tickers=article.tickers,
+                                cluster_size=len(cluster_articles),
+                                corroboration_count=source_count,
+                                novelty=novelty,
+                                decay=decay,
+                            )
+                        )
+                        impact_prediction = replace(
+                            impact_prediction,
+                            score=market_estimate["impact_score"],
+                        )
+                    except Exception as exc:
+                        warnings.warn(
+                            "Trained impact inference failed for an event; "
+                            f"using heuristic baseline: {exc}",
+                            RuntimeWarning,
+                        )
 
                 # -------------------------------------------------------
                 # Final adjusted confidence

@@ -1,0 +1,18 @@
+{
+  "portfolio_id": "mock_sp_global_100_subset",
+  "name": "Mock 12-stock S&P Global 100 subset (equal-weighted; not official index weights)",
+  "assets": [
+    {"ticker": "NVDA", "name": "NVIDIA", "sector": "Technology", "weight": 0.0833333333333333},
+    {"ticker": "AAPL", "name": "Apple", "sector": "Technology", "weight": 0.0833333333333333},
+    {"ticker": "MSFT", "name": "Microsoft", "sector": "Technology", "weight": 0.0833333333333333},
+    {"ticker": "AMZN", "name": "Amazon", "sector": "Consumer Discretionary", "weight": 0.0833333333333333},
+    {"ticker": "GOOGL", "name": "Alphabet Class A", "sector": "Communication Services", "weight": 0.0833333333333333},
+    {"ticker": "AVGO", "name": "Broadcom", "sector": "Technology", "weight": 0.0833333333333333},
+    {"ticker": "JPM", "name": "JPMorgan Chase", "sector": "Financials", "weight": 0.0833333333333333},
+    {"ticker": "LLY", "name": "Eli Lilly", "sector": "Healthcare", "weight": 0.0833333333333333},
+    {"ticker": "META", "name": "Meta Platforms", "sector": "Communication Services", "weight": 0.0833333333333333},
+    {"ticker": "TSLA", "name": "Tesla", "sector": "Consumer Discretionary", "weight": 0.0833333333333333},
+    {"ticker": "XOM", "name": "Exxon Mobil", "sector": "Energy", "weight": 0.0833333333333333},
+    {"ticker": "WMT", "name": "Walmart", "sector": "Consumer Staples", "weight": 0.0833333333333333}
+  ]
+}
