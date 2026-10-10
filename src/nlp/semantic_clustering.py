@@ -19,7 +19,6 @@ from src.engine.schemas import Article
 from src.nlp.event_classifier import (
     FinancialEventClassifier,
 )
-from src.nlp.finance_embeddings import FinanceEmbedder
 
 
 @dataclass
@@ -40,9 +39,13 @@ class SemanticEventClusterer:
         semantic_threshold_with_ticker: float = 0.52,
     ):
 
-        self.embedder = (
-            embedder or FinanceEmbedder()
-        )
+        if embedder is None:
+            # Keep clustering tests and non-embedding utilities importable
+            # without eagerly importing/loading the heavy transformer stack.
+            from src.nlp.finance_embeddings import FinanceEmbedder
+
+            embedder = FinanceEmbedder()
+        self.embedder = embedder
 
         self.event_classifier = (
             event_classifier
