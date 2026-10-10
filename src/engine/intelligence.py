@@ -327,10 +327,6 @@ class EventIntelligenceEngine:
                                 event_confidence=event_prediction.confidence,
                                 event_type=event_prediction.label,
                                 tickers=article.tickers,
-                                cluster_size=observed_cluster_size,
-                                corroboration_count=corroboration.unique_source_count,
-                                novelty=novelty,
-                                decay=decay,
                             )
                         )
                         impact_prediction = replace(
