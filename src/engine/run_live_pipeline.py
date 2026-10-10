@@ -199,6 +199,35 @@ def _report_sources(pipeline: Any) -> None:
         )
 
 
+def save_cycle_status(
+    summary: dict[str, Any],
+    pipeline: Any,
+    path: str | Path,
+    completed_at: datetime,
+) -> dict[str, Any]:
+    """Persist summary and source health for the file-backed API."""
+    sources = []
+    for item in getattr(pipeline, "last_source_statuses", []):
+        sources.append({
+            "source_name": str(getattr(item, "source_name", "unknown")),
+            "success": bool(getattr(item, "success", False)),
+            "articles_returned": int(getattr(item, "articles_returned", 0)),
+            "error": getattr(item, "error", None),
+        })
+    payload = {
+        **summary,
+        "completed_at": completed_at.astimezone(timezone.utc).isoformat(),
+        "sources": sources,
+    }
+    target = _resolve_path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False, default=str),
+        encoding="utf-8",
+    )
+    return payload
+
+
 def run_live_cycle(
     pipeline: Any,
     *,
@@ -212,6 +241,7 @@ def run_live_cycle(
     rebalance_history_output: str | Path = "data/processed/rebalance_history.jsonl",
     portfolio_state_output: str | Path = "data/processed/index_portfolio_state.json",
     processed_registry_output: str | Path = "data/processed/processed_articles.json",
+    cycle_status_output: str | Path = "data/processed/latest_cycle_status.json",
     stress_latest_output: str | Path = "data/processed/latest_stress_results.jsonl",
     stress_history_output: str | Path = "data/processed/stress_results_history.jsonl",
     engine_factory: Callable[[], Any] | None = None,
@@ -235,7 +265,7 @@ def run_live_cycle(
     articles_path = _resolve_path(articles_output)
     if not fetched:
         print("[ERROR] No live articles were fetched; synthetic fixtures were not used.")
-        return {
+        summary = {
             "exit_code": 2,
             "fetched_articles": 0,
             "new_articles": 0,
@@ -243,6 +273,7 @@ def run_live_cycle(
             "stress_tests": 0,
             "message": "No source returned usable articles.",
         }
+        return save_cycle_status(summary, pipeline, cycle_status_output, cycle_time)
 
     processed_registry_path = _resolve_path(processed_registry_output)
     processed_fingerprints = load_processed_fingerprints(processed_registry_path)
@@ -262,14 +293,15 @@ def run_live_cycle(
 
     if not fresh_articles:
         print("[INFO] No new articles in this window; inference and downstream actions skipped.")
-        return {
+        summary = {
             "exit_code": 0,
             "fetched_articles": len(fetched),
             "new_articles": 0,
             "events": 0,
             "stress_tests": 0,
-            "message": "All fetched records were already archived; no state changed.",
+            "message": "All fetched records were already processed; no state changed.",
         }
+        return save_cycle_status(summary, pipeline, cycle_status_output, cycle_time)
 
     if engine_factory is None:
         # Delayed import keeps parsing/state helpers and network-independent
@@ -347,7 +379,7 @@ def run_live_cycle(
         updated_at=cycle_time,
     )
 
-    return {
+    summary = {
         "exit_code": 0,
         "fetched_articles": len(fetched),
         "new_articles": len(fresh_articles),
@@ -360,6 +392,7 @@ def run_live_cycle(
         "stress_history_appended": appended_stresses,
         "message": "Live cycle completed.",
     }
+    return save_cycle_status(summary, pipeline, cycle_status_output, cycle_time)
 
 
 def main() -> int:
@@ -380,6 +413,7 @@ def main() -> int:
     parser.add_argument("--rebalance-history-output", default="data/processed/rebalance_history.jsonl")
     parser.add_argument("--portfolio-state-output", default="data/processed/index_portfolio_state.json")
     parser.add_argument("--processed-registry-output", default="data/processed/processed_articles.json")
+    parser.add_argument("--cycle-status-output", default="data/processed/latest_cycle_status.json")
     parser.add_argument("--stress-output", default="data/processed/latest_stress_results.jsonl")
     parser.add_argument("--stress-history-output", default="data/processed/stress_results_history.jsonl")
     args = parser.parse_args()
@@ -401,6 +435,7 @@ def main() -> int:
         rebalance_history_output=args.rebalance_history_output,
         portfolio_state_output=args.portfolio_state_output,
         processed_registry_output=args.processed_registry_output,
+        cycle_status_output=args.cycle_status_output,
         stress_latest_output=args.stress_output,
         stress_history_output=args.stress_history_output,
     )
