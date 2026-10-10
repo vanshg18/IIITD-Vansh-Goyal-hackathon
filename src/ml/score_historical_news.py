@@ -9,11 +9,8 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import re
 from pathlib import Path
-from typing import Any
 
-import pandas as pd
 from dotenv import load_dotenv
 
 from src.engine.impact import ImpactEngine
@@ -27,104 +24,10 @@ from src.engine.schemas import (
 )
 from src.nlp.event_router import EventClassifierRouter
 from src.nlp.sentiment import FinancialSentimentAnalyzer
+from src.ml.historical_news import collect_rows
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-
-
-def _key(value: Any) -> str:
-    return re.sub(r"[^a-z0-9]", "", str(value).lower())
-
-
-def _column(columns, overrides, key, aliases, required=True):
-    override = overrides.get(key)
-    if override:
-        if override not in columns:
-            raise ValueError(
-                f"Column override {override!r} for {key} was not found. "
-                f"Available columns: {list(columns)}"
-            )
-        return override
-    by_key = {_key(name): name for name in columns}
-    for alias in aliases:
-        if _key(alias) in by_key:
-            return by_key[_key(alias)]
-    if required:
-        raise ValueError(
-            f"Could not auto-detect the {key} column. Use a --{key}-column override. "
-            f"Available columns: {list(columns)}"
-        )
-    return None
-
-
-def collect_rows(
-    input_csv: str | Path,
-    limit: int,
-    tickers: set[str] | None,
-    date_column: str | None = None,
-    ticker_column: str | None = None,
-    title_column: str | None = None,
-    body_column: str | None = None,
-) -> list[dict[str, Any]]:
-    overrides = {
-        "date": date_column,
-        "ticker": ticker_column,
-        "title": title_column,
-        "body": body_column,
-    }
-    aliases = {
-        "date": ["timestamp", "published_at", "published", "date", "datetime", "time", "news_date"],
-        "ticker": ["ticker", "symbol", "stock_symbol", "stock_symbols", "tickers", "stock"],
-        "title": ["headline", "title", "article_title", "news_title", "news_headline"],
-        "body": ["body", "body_text", "article", "article_text", "summary", "description", "text"],
-        "url": ["url", "link", "article_url", "news_url"],
-        "source": ["source", "publisher", "site", "news_source"],
-    }
-    rows: list[dict[str, Any]] = []
-    paths = Path(input_csv)
-    if not paths.is_file():
-        raise FileNotFoundError(paths)
-
-    for chunk in pd.read_csv(paths, chunksize=50_000, low_memory=False):
-        date_col = _column(chunk.columns, overrides, "date", aliases["date"])
-        ticker_col = _column(chunk.columns, overrides, "ticker", aliases["ticker"])
-        title_col = _column(chunk.columns, overrides, "title", aliases["title"])
-        body_col = _column(
-            chunk.columns, overrides, "body", aliases["body"], required=False
-        )
-        url_col = _column(chunk.columns, {}, "url", aliases["url"], required=False)
-        source_col = _column(chunk.columns, {}, "source", aliases["source"], required=False)
-
-        for record in chunk.to_dict(orient="records"):
-            title = str(record.get(title_col, "") or "").strip()
-            if not title or title.lower() == "nan":
-                continue
-            raw_tickers = str(record.get(ticker_col, "") or "").upper()
-            symbols = [x.strip().upper() for x in re.split(r"[;,|]", raw_tickers) if x.strip()]
-            symbols = list(dict.fromkeys(symbols))
-            if tickers:
-                symbols = [symbol for symbol in symbols if symbol in tickers]
-            if not symbols:
-                continue
-
-            timestamp = pd.to_datetime(record.get(date_col), errors="coerce", utc=True)
-            if pd.isna(timestamp):
-                continue
-            body = str(record.get(body_col, "") or "").strip() if body_col else ""
-            if body.lower() == "nan":
-                body = ""
-            text = " ".join([title, body]).strip()[:8000]
-            rows.append({
-                "timestamp": timestamp.to_pydatetime(),
-                "title": title[:1000],
-                "raw_text": text or title,
-                "tickers": symbols,
-                "url": str(record.get(url_col, "") or "").strip() if url_col else "",
-                "source": str(record.get(source_col, "") or "").strip() if source_col else "",
-            })
-            if len(rows) >= limit:
-                return rows
-    return rows
 
 
 def score_historical_news(
@@ -138,6 +41,7 @@ def score_historical_news(
     ticker_column: str | None = None,
     title_column: str | None = None,
     body_column: str | None = None,
+    sample_seed: int = 42,
 ) -> int:
     rows = collect_rows(
         input_csv=input_csv,
@@ -147,6 +51,7 @@ def score_historical_news(
         ticker_column=ticker_column,
         title_column=title_column,
         body_column=body_column,
+        sample_seed=sample_seed,
     )
     if not rows:
         raise ValueError(
@@ -254,6 +159,7 @@ def main() -> int:
     parser.add_argument("--ticker-column", default=None)
     parser.add_argument("--title-column", default=None)
     parser.add_argument("--body-column", default=None)
+    parser.add_argument("--sample-seed", type=int, default=42)
     args = parser.parse_args()
     if args.limit < 1:
         parser.error("--limit must be at least 1.")
@@ -269,6 +175,7 @@ def main() -> int:
         ticker_column=args.ticker_column,
         title_column=args.title_column,
         body_column=args.body_column,
+        sample_seed=args.sample_seed,
     )
     return 0
 
