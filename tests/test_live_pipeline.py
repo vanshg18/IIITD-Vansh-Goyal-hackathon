@@ -87,6 +87,7 @@ def output_paths(tmp_path):
         "rebalance_history_output": tmp_path / "rebalance_history.jsonl",
         "portfolio_state_output": tmp_path / "index_state.json",
         "processed_registry_output": tmp_path / "processed_articles.json",
+        "cycle_status_output": tmp_path / "latest_cycle_status.json",
         "stress_latest_output": tmp_path / "latest_stress.jsonl",
         "stress_history_output": tmp_path / "stress_history.jsonl",
     }
@@ -114,6 +115,9 @@ def test_live_cycle_runs_modules_persists_weights_and_skips_duplicate_articles(t
     assert first["events"] == 1
     assert first["stress_tests"] == 1
     assert engine.calls == 1
+    cycle_status = json.loads(outputs["cycle_status_output"].read_text())
+    assert cycle_status["exit_code"] == 0
+    assert cycle_status["sources"][0]["source_name"] == "Fake live source"
     registry = json.loads(outputs["processed_registry_output"].read_text())
     assert len(registry["processed_fingerprints"]) == 1
 
@@ -204,3 +208,6 @@ def test_empty_live_fetch_does_not_fall_back_to_synthetic_articles(tmp_path):
     assert not outputs["articles_output"].exists()
     assert not outputs["portfolio_state_output"].exists()
     assert not outputs["processed_registry_output"].exists()
+    cycle_status = json.loads(outputs["cycle_status_output"].read_text())
+    assert cycle_status["exit_code"] == 2
+    assert cycle_status["sources"][0]["success"] is True
