@@ -56,11 +56,13 @@ def test_rebalancer_respects_weight_and_turnover_limits_and_sentiment_direction(
         max_one_way_turnover=0.05,
         sensitivity=1.0,
     )
-    now = datetime.now(timezone.utc)
     events = [
         make_event(event_id="positive_aapl", ticker="AAPL", sentiment=0.95, event_type="Earnings", impact=9.5),
         make_event(event_id="negative_msft", ticker="MSFT", sentiment=-0.95, event_type="Regulatory", impact=9.0),
     ]
+    # Build the as-of timestamp after event creation; otherwise these fixtures
+    # can be a few microseconds in the future and are correctly ignored.
+    now = datetime.now(timezone.utc)
     result = rebalancer.rebalance(events, as_of=now)
 
     assert np.isclose(sum(result.after_weights.values()), 1.0, atol=1e-9)
