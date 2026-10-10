@@ -6,7 +6,12 @@ from datetime import date, timedelta
 import numpy as np
 import pandas as pd
 
-from src.ml.historical_impact import build_market_reaction_dataset, load_price_panel
+from src.ml.historical_impact import (
+    FEATURE_COLUMNS,
+    MarketReactionImpactModel,
+    build_market_reaction_dataset,
+    load_price_panel,
+)
 
 
 def test_build_dataset_uses_next_close_and_peer_benchmark(tmp_path):
@@ -117,3 +122,45 @@ def test_load_price_panel_supports_per_ticker_directory(tmp_path):
     frame = load_price_panel(tmp_path, tickers={"AAA"})
     assert set(frame["ticker"]) == {"AAA"}
     assert len(frame) == 2
+
+
+class FakePredictor:
+    def predict(self, frame):
+        assert list(frame.columns) == FEATURE_COLUMNS
+        return np.full(len(frame), 0.025)
+
+
+def test_impact_model_uses_only_shared_training_serving_features():
+    artifact = {
+        "accepted_for_live_inference": True,
+        "feature_columns": FEATURE_COLUMNS,
+        "pipeline": FakePredictor(),
+        "calibration_abs_returns": np.array([0.01, 0.02, 0.03, 0.04]),
+    }
+    model = MarketReactionImpactModel(artifact)
+
+    prediction = model.predict_event(
+        sentiment_score=-0.7,
+        sentiment_confidence=0.9,
+        event_confidence=0.85,
+        event_type="Credit",
+        tickers=["AAPL", "MSFT"],
+    )
+
+    assert 1.0 <= prediction["impact_score"] <= 10.0
+    assert np.isclose(prediction["predicted_abs_abnormal_return"], 0.025)
+
+
+def test_impact_model_rejects_outdated_feature_schema():
+    artifact = {
+        "accepted_for_live_inference": True,
+        "feature_columns": ["old_feature"],
+        "pipeline": FakePredictor(),
+        "calibration_abs_returns": np.array([0.01, 0.02]),
+    }
+    try:
+        MarketReactionImpactModel(artifact)
+    except ValueError as exc:
+        assert "feature schema" in str(exc)
+    else:
+        raise AssertionError("Expected old feature schema to be rejected")

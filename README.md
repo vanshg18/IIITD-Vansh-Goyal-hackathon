@@ -141,14 +141,16 @@ pytest -q
 
 ## Train an impact model from historical data
 
-The historical model uses a market-observable target: the magnitude of a ticker's next-session return relative to the equal-weight return of the loaded comparison universe. It trains on EventPulse outputs, not hand-written synthetic impact labels. The resulting score is a relative 1–10 rank; it is not a probability or causal claim.
+The historical model uses a market-observable target: the magnitude of a ticker's next-session abnormal return relative to the equal-weight return of the loaded comparison universe. It trains on EventPulse outputs, not hand-written synthetic impact labels. The resulting score is a relative 1–10 rank; it is not a probability or causal claim.
+
+The historical scorer selects a deterministic hash-based sample across the whole input CSV, rather than simply taking its first rows. Set `--sample-seed` to reproduce a different sample. The model deliberately trains only on features available in both historical scoring and live inference: sentiment score, sentiment confidence, event-classification confidence, ticker, and event type. Cluster size, corroboration, novelty, decay, and historical volatility are retained in the dataset for analysis but excluded from this model until they can be reconstructed point-in-time in training and supplied consistently at live inference.
 
 For a practical first experiment, use a small ticker universe and a few thousand news records. FNSPID is one possible public starting point; fetch data from its upstream repository (https://github.com/Zdong104/FNSPID_Financial_News_Dataset) and verify the dataset license/terms before use. Keep raw downloads outside Git, e.g. under data/raw/.
 
-1. Score historical news with the same FinBERT and event router used in EventPulse:
+1. Score a deterministic sample of historical news with the same FinBERT and event router used in EventPulse. The entire CSV is scanned to select a representative sample, so processing a multi-million-row dataset may take time even when `--limit` is small:
 
 ~~~bash
-python -m src.ml.score_historical_news --input data/raw/nasdaq_exteral_data.csv --tickers AAPL,MSFT,NVDA,AMZN,JPM --limit 2000 --device 0
+python -m src.ml.score_historical_news --input data/raw/nasdaq_exteral_data.csv --tickers AAPL,MSFT,NVDA,AMZN,JPM --limit 2000 --sample-seed 42 --device 0
 ~~~
 
 2. Label those structured events against historical prices. The price input may be a long CSV, a directory of per-ticker CSVs, or a ZIP of per-ticker CSVs:
@@ -159,7 +161,7 @@ python -m src.ml.train_market_impact --prices data/raw/full_history.zip --benchm
 
 3. Inspect data/processed/impact_model_metrics.json. The artifact is only enabled for live inference if its validation MAE beats the training-median baseline. The final test block is chronological and is not used to choose acceptance.
 
-The current implementation uses daily close-to-close returns. It treats features as end-of-day information and aligns weekend/holiday news to the latest earlier close. Daily data cannot precisely identify intraday market reaction, so this is a proxy, not causal attribution. For a larger or serious financial evaluation, prefer timestamped intraday prices and a longer date range. If the model does not beat the baseline, EventPulse deliberately continues to use the transparent heuristic impact score.
+The target uses daily close-to-close returns. For US-listed equities, publication timestamps before 16:00 America/New_York anchor strictly to the prior close, and post-close timestamps anchor to that day's close; weekend and holiday news use the latest available close. Daily bars cannot precisely identify intraday reaction timing, so this remains a proxy, not causal attribution. For a larger or serious financial evaluation, prefer timestamped intraday prices and a longer date range. If the model does not beat the baseline, EventPulse deliberately continues to use the transparent heuristic impact score.
 
 ## Important modeling limitations
 

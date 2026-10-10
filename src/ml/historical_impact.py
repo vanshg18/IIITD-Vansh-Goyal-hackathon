@@ -32,19 +32,20 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
 
 
+# Only use features computed consistently by both historical scoring and live
+# inference. Cluster/corroboration/novelty/decay are point-in-time metadata,
+# but the historical scorer does not yet reconstruct them reliably; the live
+# process also has no current-market volatility feed. Keeping them out avoids
+# training/serving skew. They remain in the output dataset for auditing.
 NUMERIC_FEATURES = [
     "sentiment_score",
     "sentiment_confidence",
     "event_confidence",
-    "cluster_size",
-    "corroboration_count",
-    "novelty",
-    "decay",
-    "volatility_20d",
 ]
 CATEGORICAL_FEATURES = ["ticker", "event_type"]
 FEATURE_COLUMNS = NUMERIC_FEATURES + CATEGORICAL_FEATURES
 TARGET_COLUMN = "abs_abnormal_return"
+FEATURE_SCHEMA_VERSION = 2
 
 
 def _key(value: Any) -> str:
@@ -498,6 +499,10 @@ def train_market_impact_model(
         "validation_rows": int(valid_mask.sum()),
         "test_rows": int(test_mask.sum()),
         "target": "absolute next-session abnormal return",
+        "model_features": FEATURE_COLUMNS,
+        "excluded_features": [
+            "cluster_size", "corroboration_count", "novelty", "decay", "volatility_20d"
+        ],
         "return_frequency": "daily close-to-close",
         "benchmark": "equal-weight average of the loaded universe excluding the target ticker",
         "validation_model": validation_model_metrics,
@@ -520,6 +525,7 @@ def train_market_impact_model(
         "pipeline": final_pipeline,
         "calibration_abs_returns": calibration_values,
         "accepted_for_live_inference": bool(accepted),
+        "feature_schema_version": FEATURE_SCHEMA_VERSION,
         "feature_columns": FEATURE_COLUMNS,
         "numeric_features": NUMERIC_FEATURES,
         "categorical_features": CATEGORICAL_FEATURES,
@@ -549,6 +555,11 @@ class MarketReactionImpactModel:
     def __init__(self, artifact: dict[str, Any]):
         if not artifact.get("accepted_for_live_inference", False):
             raise ValueError("Impact model did not pass validation baseline acceptance.")
+        if artifact.get("feature_columns") != FEATURE_COLUMNS:
+            raise ValueError(
+                "Impact model feature schema is outdated or incompatible; retrain it "
+                "with the current historical impact workflow."
+            )
         self.pipeline: Pipeline = artifact["pipeline"]
         self.calibration_abs_returns = np.asarray(
             artifact["calibration_abs_returns"], dtype=float
@@ -582,11 +593,6 @@ class MarketReactionImpactModel:
         event_confidence: float,
         event_type: str,
         tickers: list[str],
-        cluster_size: int = 1,
-        corroboration_count: int = 1,
-        novelty: float = 1.0,
-        decay: float = 1.0,
-        volatility_20d: float | None = None,
     ) -> dict[str, float]:
         tickers = [str(t).strip().upper() for t in tickers if str(t).strip()]
         tickers = tickers or ["UNKNOWN"]
@@ -596,13 +602,6 @@ class MarketReactionImpactModel:
                 "sentiment_score": sentiment_score,
                 "sentiment_confidence": sentiment_confidence,
                 "event_confidence": event_confidence,
-                "cluster_size": cluster_size,
-                "corroboration_count": corroboration_count,
-                "novelty": novelty,
-                "decay": decay,
-                "volatility_20d": (
-                    float(volatility_20d) if volatility_20d is not None else np.nan
-                ),
                 "ticker": ticker,
                 "event_type": event_type or "Unknown",
             })
