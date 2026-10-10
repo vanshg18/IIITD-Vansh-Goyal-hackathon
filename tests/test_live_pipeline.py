@@ -4,6 +4,7 @@ import json
 from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 
+import src.engine.run_live_pipeline as live_pipeline
 from src.engine.run_live_pipeline import (
     load_portfolio_with_state,
     run_live_cycle,
@@ -211,3 +212,39 @@ def test_empty_live_fetch_does_not_fall_back_to_synthetic_articles(tmp_path):
     cycle_status = json.loads(outputs["cycle_status_output"].read_text())
     assert cycle_status["exit_code"] == 2
     assert cycle_status["sources"][0]["success"] is True
+
+
+def test_module_b_failure_does_not_persist_module_a_rebalance(tmp_path, monkeypatch):
+    now = datetime.now(timezone.utc)
+    article = make_article(now - timedelta(minutes=10))
+    event = make_event(article.timestamp)
+    outputs = output_paths(tmp_path)
+
+    class FailingStressTester:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def evaluate_events(self, events):
+            raise RuntimeError("synthetic Module B failure")
+
+    monkeypatch.setattr(live_pipeline, "PortfolioStressTester", FailingStressTester)
+
+    try:
+        run_live_cycle(
+            FakePipeline([article]),
+            engine_factory=lambda: FakeEngine([event]),
+            reference_time=now,
+            **outputs,
+        )
+    except RuntimeError as exc:
+        assert "synthetic Module B failure" in str(exc)
+    else:
+        raise AssertionError("Expected Module B failure")
+
+    # Raw article archive is allowed to remain for retry, but downstream state
+    # and the processed registry must not claim the failed cycle completed.
+    assert outputs["articles_output"].exists()
+    assert not outputs["portfolio_state_output"].exists()
+    assert not outputs["rebalance_latest_output"].exists()
+    assert not outputs["processed_registry_output"].exists()
+    assert not outputs["latest_events_output"].exists()
