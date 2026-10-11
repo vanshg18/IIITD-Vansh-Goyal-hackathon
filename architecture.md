@@ -34,7 +34,7 @@ flowchart TB
 
     subgraph ACTIONS["5. Downstream simulations"]
         A["Module A\nLong-only mock-index rebalancer\nWeight bounds + 10% one-way turnover cap"]
-        B["Module B\nSynthetic banking portfolio stress tester\nCategory / impact scenario triggers"]
+        B["Module B\nSynthetic banking stress tester\nNegative sentiment + category + impact gates\nLoans, bonds, equities, cash + derivative shock proxy"]
     end
 
     subgraph PRESENT["6. Outputs and presentation"]
@@ -83,7 +83,7 @@ flowchart TB
 - **Distinct source and processed state:** archiving a record does not imply that the NLP and downstream cycle completed.
 - **Explicit source provenance:** timestamps, source names, URLs and ticker metadata remain attached where supplied.
 - **Point-in-time clustering signals:** the engine considers only articles available as of an article's publication time when calculating novelty and corroboration, reducing future-report leakage.
-- **Constrained simulations:** Module A enforces long-only weight bounds and a one-way turnover cap; Module B uses declared synthetic scenario assumptions.
+- **Constrained simulations:** Module A enforces long-only weight bounds and a one-way turnover cap, applies the event-specific decay once, and emits progressive replay snapshots; Module B requires negative sentiment for downside scenario triggers and uses declared synthetic scenario assumptions including a simplified derivative shock proxy.
 - **Honest model status:** the currently active impact score is an interpretable heuristic. The historical training workflow exists, but a trained/accepted impact-model artifact is not included in the repository version reviewed.
 
 ## Model inventory
