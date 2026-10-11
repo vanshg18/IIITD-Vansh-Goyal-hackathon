@@ -378,7 +378,13 @@ class EventIntelligenceEngine:
                     sentiment=sentiment,
                     impact=ImpactResult(
                         score=impact_prediction.score,
-                        confidence=impact_prediction.confidence,
+                        # Let independent-source corroboration inform the
+                        # reported confidence instead of calculating and then
+                        # discarding adjusted_confidence above.
+                        confidence=max(
+                            impact_prediction.confidence,
+                            adjusted_confidence,
+                        ),
                     ),
                     signal=SignalMetadata(
                         novelty=novelty,
