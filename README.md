@@ -7,7 +7,7 @@
 **College / Campus:** IIIT Delhi  
 **Demo Video Link (YouTube Unlisted):** _TODO: add after recording the 10-minute walkthrough_  
 **Slide Deck:** [Presentation PDF](docs/presentation.pdf) | [Editable PowerPoint](docs/presentation.pptx)  
-**Architecture:** [Mermaid source](architecture.md) | [Rendered diagram](docs/architecture.png)  
+**Architecture:** [Mermaid source](architecture.md) | [Rendered diagram](docs/architecture.svg)  
 **Public Repository:** https://github.com/vanshg18/IIITD-Vansh-Goyal-hackathon
 
 ## 1. Project Overview / Problem Statement & Approach
@@ -20,7 +20,7 @@ The same event contract feeds two simulations: **Module A**, a constrained mock-
 
 ## 2. Architecture & Tech Stack
 
-![EventPulse architecture](docs/architecture.png)
+![EventPulse architecture](docs/architecture.svg)
 
 Full Mermaid source and detailed components: [`architecture.md`](architecture.md); standalone diagram source: [`docs/architecture.mmd`](docs/architecture.mmd).
 
@@ -54,12 +54,13 @@ The repository includes a small, fully synthetic dataset for repeatable demonstr
 
 | File | Nature and role |
 |---|---|
-| `data/demo/articles.json` | 12 hand-authored fictional financial headlines/articles with synthetic timestamps and fictional companies/tickers. This is the input for the current end-to-end demo replay. |
+| `data/demo/index_articles.json` | 12 hand-authored synthetic financial headlines with timestamps and real ticker symbols from the 12-stock mock-index universe. This is the current end-to-end demo input; these are not real news reports. |
+| `data/demo/articles.json` | Legacy fully synthetic/fictitious-company article fixtures used by older demo helpers and classifier smoke tests. |
 | `data/demo/event_eval.json` | Expected event labels for the 12 synthetic article IDs. It is a small synthetic smoke-test fixture, not an independently labelled real-news benchmark. |
-| `data/demo/portfolio.json` | Fictional company portfolio used by the synthetic Module A replay (for example, QDEV, NVBK, MCRD and CLMX). |
-| `data/demo/banking_portfolio.json` | Synthetic banking portfolio with eight positions and a declared aggregate value of 1,000,000,000 portfolio units. The file currently does not declare a currency. |
+| `data/demo/portfolio.json` | Legacy fictional-company portfolio retained for other demo/fixture helpers; the current end-to-end replay uses `index_portfolio.json`. |
+| `data/demo/banking_portfolio.json` | Synthetic USD banking portfolio with nine positions, including loans, government/corporate bonds, equities, cash and a simplified derivative exposure proxy; total assets are USD 1,000,000,000. |
 | `data/demo/bank_stress_scenarios.json` | Synthetic event categories, impact thresholds and assumed shocks used by Module B. |
-| `data/demo/index_portfolio.json` | Separate 12-stock real-ticker mock-index universe for the live pipeline. Equal weights are a simulation and are not official S&P Global 100 index weights. |
+| `data/demo/index_portfolio.json` | 12-stock real-ticker mock-index universe used by both the current synthetic replay and live pipeline. Equal weights are a simulation, not official S&P Global 100 index weights. |
 | `data/demo/stress_scenarios.json` | Additional/legacy synthetic scenario fixture used by the demo ingestion helper; the current `run_demo_pipeline` uses `bank_stress_scenarios.json` for Module B. |
 
 **Live sources:** GDELT DOC public news metadata and SEC EDGAR current 8-K filings; an Alpha Vantage feed is optional and requires an API key. Source data are fetched at runtime, subject to provider connectivity and rate limits. GDELT may return a headline rather than the full article body.
@@ -127,7 +128,21 @@ Open `http://127.0.0.1:8000/docs` for interactive API documentation. Routes incl
 python -m pytest -q
 ```
 
-Observed local run: **81 passed, 1 warning**. The warning is a Starlette/HTTPX test-client deprecation warning. These tests check software behaviour; they are not real-world NLP accuracy metrics.
+Observed local run on the updated review branch: **89 passed, 1 warning**. The warning is a Starlette/HTTPX test-client deprecation warning. These tests check software behaviour; they are not real-world NLP accuracy metrics.
+
+## Downstream Modules
+
+### Module A - constrained mock-index rebalancing
+
+The synthetic end-to-end replay uses `data/demo/index_portfolio.json`: 12 real ticker symbols with equal initial weights for demonstration, **not official S&P Global 100 weights**. Synthetic headlines in `data/demo/index_articles.json` use ticker symbols in that universe so the replay can demonstrate asset matching. The rebalancer combines signed sentiment with impact, confidence, novelty and the event-specific decay factor, collapses repeated reports by cluster/ticker, enforces long-only holding bounds, and caps one-way turnover at 10%. The updated replay saves three progressive snapshots for a weights-over-time chart. No orders are sent to a broker and no investment performance is claimed.
+
+### Module B - synthetic wholesale-bank stress testing
+
+The banking fixture in `data/demo/banking_portfolio.json` is synthetic and denominated in USD, with nine positions across loans, government/corporate bonds, equities, cash and a derivative exposure **shock proxy**. A downside scenario requires a matching event category, a minimum impact score, and negative sentiment. Scenario shocks are explicitly configured in `data/demo/bank_stress_scenarios.json`; outputs include before/after portfolio value, simulated loss, and position-level attribution. Derivative exposure uses an explicit configured return-shock proxy, **not** option pricing, Greeks, margin or collateral modelling. Scenario results are independent runs against the same starting portfolio; do not add the losses together.
+
+### Dataset scope
+
+No Kaggle transaction dataset, real historical news corpus, or real historical price series was used to produce the reported replay metrics. The submitted data are the small synthetic headline/portfolio/scenario fixtures plus live-source adapters that fetch public GDELT/SEC data at runtime. The historical impact-model training workflow is optional and has not produced an accepted model artifact in the reviewed version.
 
 ## 5. Key Results & Domain Impact
 
@@ -139,20 +154,23 @@ Observed from `python -m src.engine.run_demo_pipeline` and displayed in the Stre
 |---|---:|
 | Synthetic articles loaded | 12 |
 | Structured events emitted | 12 |
-| Events used by Module A | 5 |
-| Module A one-way turnover | 9.15% |
+| Mock-index holdings | 12 real ticker symbols |
+| Cluster contributions across replay snapshots | 11 |
+| Module A rebalance history snapshots | 3 |
+| Latest Module A one-way turnover | 5.90% |
 | Configured Module A turnover cap | 10% |
-| Module B stress scenarios triggered | 2 |
-| Software tests | 81 passed, 1 warning |
+| Module B stress results | 3 independent trigger runs (2 scenario names) |
+| Software tests | 89 passed, 1 warning |
 
-The two independently evaluated synthetic Module B scenarios were:
+The updated replay produced three independently triggered stress results. The Credit deterioration scenario is triggered once by a Credit event and once by a separate Regulatory event; these are distinct trigger runs against the same starting portfolio, not cumulative losses.
 
-| Scenario | Trigger event / impact | Portfolio before | Portfolio after | Simulated loss |
+| Scenario | Trigger event / impact | Portfolio before (USD) | Portfolio after (USD) | Simulated loss (USD) |
 |---|---|---:|---:|---:|
-| Broad Credit Deterioration | Credit / 8.86 out of 10 | 1,000,000,000 | 929,056,000 | 70,944,000 (7.0944%) |
-| Unexpected Monetary Tightening | Monetary Policy / 8.24 out of 10 | 1,000,000,000 | 944,540,000 | 55,460,000 (5.5460%) |
+| Broad Credit Deterioration | Credit / 8.88 out of 10 | 1,000,000,000 | 923,056,000 | 76,944,000 (7.6944%) |
+| Geopolitical / Supply Disruption Stress | Supply Chain / 8.14 out of 10 | 1,000,000,000 | 926,120,000 | 73,880,000 (7.3880%) |
+| Broad Credit Deterioration | Regulatory / 8.03 out of 10 | 1,000,000,000 | 923,056,000 | 76,944,000 (7.6944%) |
 
-Amounts are generic portfolio units because the current synthetic bank fixture does not declare a currency. The two stress outcomes are separate hypothetical scenarios against the same starting portfolio, not cumulative losses and not forecasts of an actual bank.
+All holdings, source stories, and shocks in this replay are synthetic. USD is the declared currency of the synthetic bank fixture. Scenario results are not real-bank forecasts, and the three losses must not be added together.
 
 ### Live-source smoke test observed during development
 
@@ -193,13 +211,13 @@ Review `data/processed/impact_model_metrics.json`. The code accepts a model only
 - GDELT may be rate-limited, and metadata-only headlines can lack the context available in full article text.
 - Module A uses simulated weights, not official index weights or actual trades.
 - Module B uses a synthetic banking portfolio and manually configured scenario shocks. It is not a valuation of a real bank.
-- The Streamlit dashboard is a **local synthetic demo**, not a deployed cloud service. Cloud deployment is not specified as a requirement in the provided submission guidelines. Because `data/processed/` is Git-ignored, a fresh cloud deployment would need tracked demo results or a documented generation step.
+- The Streamlit dashboard is a **local synthetic replay** and reads generated outputs under `data/processed/demo_replay/`. It is not a deployed cloud service and does not currently display the live API's outputs. Run the demo pipeline after cloning before starting Streamlit.
 
 ## Submission and links
 
 - Slide deck: [`docs/presentation.pdf`](docs/presentation.pdf) (7 slides; within the 5-7-slide guideline).
 - Editable deck: [`docs/presentation.pptx`](docs/presentation.pptx).
-- Architecture: [`architecture.md`](architecture.md) and [`docs/architecture.png`](docs/architecture.png).
+- Architecture: [`architecture.md`](architecture.md) and [`docs/architecture.svg`](docs/architecture.svg).
 - 10-minute walkthrough script: [`docs/demo_walkthrough_script.md`](docs/demo_walkthrough_script.md).
 - 5-minute live demo script: [`docs/live_demo_5min_script.md`](docs/live_demo_5min_script.md).
 - **Demo video:** replace the placeholder at the top with the final 10-minute YouTube Unlisted link. Test that it plays in a private/incognito window before submitting.

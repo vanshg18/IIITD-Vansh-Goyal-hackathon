@@ -108,7 +108,7 @@ def test_high_impact_geopolitical_event_triggers_stress_test():
     assert scenario.portfolio_value_after < scenario.portfolio_value_before
     assert scenario.net_loss > 0
     assert scenario.net_loss_pct > 0
-    assert len(scenario.positions) == 8
+    assert len(scenario.positions) == 9
 
 
 def test_low_impact_event_does_not_trigger_stress_test():
@@ -117,3 +117,63 @@ def test_low_impact_event_does_not_trigger_stress_test():
         make_event(event_id="geo_low", event_type="Geopolitical", impact=5.0)
     ])
     assert result == []
+
+def test_positive_credit_event_does_not_trigger_downside_stress():
+    tester = PortfolioStressTester()
+    result = tester.evaluate_events([
+        make_event(
+            event_id="credit_upgrade",
+            ticker="JPM",
+            sentiment=0.8,
+            event_type="Credit",
+            impact=9.5,
+        )
+    ])
+    assert result == []
+
+
+def test_neutral_regulatory_event_does_not_trigger_downside_stress():
+    tester = PortfolioStressTester()
+    result = tester.evaluate_events([
+        make_event(
+            event_id="regulatory_approval",
+            ticker="AAPL",
+            sentiment=0.0,
+            event_type="Regulatory",
+            impact=9.5,
+        )
+    ])
+    assert result == []
+
+
+def test_negative_high_impact_credit_event_triggers_downside_stress():
+    tester = PortfolioStressTester()
+    result = tester.evaluate_events([
+        make_event(
+            event_id="credit_downgrade",
+            ticker="JPM",
+            sentiment=-0.9,
+            event_type="Credit",
+            impact=9.1,
+        )
+    ])
+    assert len(result) == 1
+    assert result[0].scenario_id == "credit_deterioration"
+    assert result[0].net_loss > 0
+
+def test_synthetic_bank_portfolio_includes_derivative_exposure():
+    _, _, positions = load_banking_portfolio()
+    assert any(position.asset_class == "derivatives" for position in positions)
+    assert np.isclose(sum(p.market_value for p in positions), 1_000_000_000.0)
+
+
+def test_derivative_position_responds_to_configured_stress_shock():
+    tester = PortfolioStressTester()
+    derivative = next(p for p in tester.positions if p.asset_class == "derivatives")
+    return_shock, credit_loss = tester._position_return(
+        derivative,
+        {"derivative_returns": {"Equity Index": -0.2}},
+    )
+    assert np.isclose(return_shock, -0.2)
+    assert credit_loss == 0.0
+

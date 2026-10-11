@@ -1,0 +1,194 @@
+[
+  {
+    "article_id": "idx_art_001",
+    "timestamp": "2026-10-03T09:00:00Z",
+    "source": {
+      "name": "Synthetic Market Wire",
+      "source_type": "demo",
+      "url": null
+    },
+    "title": "NVIDIA shares fall as new export restrictions raise concern over AI chip shipments",
+    "raw_text": "Investors reacted negatively after expanded export restrictions threatened to delay shipments of advanced AI chips and reduced near-term revenue expectations for NVIDIA.",
+    "entities": [],
+    "tickers": [
+      "NVDA"
+    ],
+    "url": null
+  },
+  {
+    "article_id": "idx_art_002",
+    "timestamp": "2026-10-03T09:05:00Z",
+    "source": {
+      "name": "Synthetic Equity Daily",
+      "source_type": "demo",
+      "url": null
+    },
+    "title": "Apple supplier outlook weakens amid softer smartphone demand",
+    "raw_text": "Several suppliers lowered their outlook as smartphone demand weakened, raising concerns about Apple's near-term sales and margins.",
+    "entities": [],
+    "tickers": [
+      "AAPL"
+    ],
+    "url": null
+  },
+  {
+    "article_id": "idx_art_003",
+    "timestamp": "2026-10-03T09:10:00Z",
+    "source": {
+      "name": "Synthetic Technology News",
+      "source_type": "demo",
+      "url": null
+    },
+    "title": "Microsoft announces new AI cloud contracts and lifts revenue outlook",
+    "raw_text": "Microsoft announced new enterprise AI cloud contracts and increased its revenue outlook, citing robust demand for its cloud services.",
+    "entities": [],
+    "tickers": [
+      "MSFT"
+    ],
+    "url": null
+  },
+  {
+    "article_id": "idx_art_004",
+    "timestamp": "2026-10-03T09:15:00Z",
+    "source": {
+      "name": "Synthetic Credit Monitor",
+      "source_type": "demo",
+      "url": null
+    },
+    "title": "Ratings agency downgrades JPMorgan Chase credit outlook amid rising default risks",
+    "raw_text": "A rating agency lowered JPMorgan Chase's credit outlook, citing rising borrower defaults, weaker credit quality, and potential loan-loss pressure.",
+    "entities": [],
+    "tickers": [
+      "JPM"
+    ],
+    "url": null
+  },
+  {
+    "article_id": "idx_art_005",
+    "timestamp": "2026-10-03T09:18:00Z",
+    "source": {
+      "name": "Synthetic Banking Wire",
+      "source_type": "demo",
+      "url": null
+    },
+    "title": "JPMorgan Chase downgrade raises concern about potential loan losses",
+    "raw_text": "A further report on JPMorgan Chase's credit downgrade described heightened borrower-default concerns and possible deterioration in credit quality.",
+    "entities": [],
+    "tickers": [
+      "JPM"
+    ],
+    "url": null
+  },
+  {
+    "article_id": "idx_art_006",
+    "timestamp": "2026-10-03T09:25:00Z",
+    "source": {
+      "name": "Synthetic Energy Wire",
+      "source_type": "demo",
+      "url": null
+    },
+    "title": "Energy supply disruption raises cost pressure for Exxon Mobil",
+    "raw_text": "A shipping disruption narrowed available crude supply and raised near-term operating-cost concerns for Exxon Mobil and other energy producers.",
+    "entities": [],
+    "tickers": [
+      "XOM"
+    ],
+    "url": null
+  },
+  {
+    "article_id": "idx_art_007",
+    "timestamp": "2026-10-03T09:35:00Z",
+    "source": {
+      "name": "Synthetic Regulatory Daily",
+      "source_type": "demo",
+      "url": null
+    },
+    "title": "Alphabet faces regulatory review over advertising practices",
+    "raw_text": "Regulators opened a review into Alphabet's advertising practices, creating uncertainty around compliance costs and possible restrictions.",
+    "entities": [],
+    "tickers": [
+      "GOOGL"
+    ],
+    "url": null
+  },
+  {
+    "article_id": "idx_art_008",
+    "timestamp": "2026-10-03T09:45:00Z",
+    "source": {
+      "name": "Synthetic Earnings Wire",
+      "source_type": "demo",
+      "url": null
+    },
+    "title": "Amazon reports strong quarterly earnings and raises its forecast",
+    "raw_text": "Amazon reported stronger-than-expected quarterly operating performance and raised its forecast following robust consumer and cloud demand.",
+    "entities": [],
+    "tickers": [
+      "AMZN"
+    ],
+    "url": null
+  },
+  {
+    "article_id": "idx_art_009",
+    "timestamp": "2026-10-03T09:55:00Z",
+    "source": {
+      "name": "Synthetic Auto News",
+      "source_type": "demo",
+      "url": null
+    },
+    "title": "Tesla recalls vehicles after reported safety defect",
+    "raw_text": "Tesla announced a vehicle recall after reports of a safety defect, introducing potential remediation costs and regulatory scrutiny.",
+    "entities": [],
+    "tickers": [
+      "TSLA"
+    ],
+    "url": null
+  },
+  {
+    "article_id": "idx_art_010",
+    "timestamp": "2026-10-03T10:05:00Z",
+    "source": {
+      "name": "Synthetic Semiconductor Daily",
+      "source_type": "demo",
+      "url": null
+    },
+    "title": "Broadcom raises outlook after stronger semiconductor demand",
+    "raw_text": "Broadcom raised its outlook after stronger demand for networking and semiconductor products improved its expected revenue trajectory.",
+    "entities": [],
+    "tickers": [
+      "AVGO"
+    ],
+    "url": null
+  },
+  {
+    "article_id": "idx_art_011",
+    "timestamp": "2026-10-03T10:10:00Z",
+    "source": {
+      "name": "Synthetic Healthcare Wire",
+      "source_type": "demo",
+      "url": null
+    },
+    "title": "Eli Lilly reports disappointing trial result for a new therapy",
+    "raw_text": "Eli Lilly reported a disappointing clinical-trial result that raised uncertainty around the product's timeline and potential future revenue.",
+    "entities": [],
+    "tickers": [
+      "LLY"
+    ],
+    "url": null
+  },
+  {
+    "article_id": "idx_art_012",
+    "timestamp": "2026-10-03T10:15:00Z",
+    "source": {
+      "name": "Synthetic Retail News",
+      "source_type": "demo",
+      "url": null
+    },
+    "title": "Walmart reports resilient sales and improves annual outlook",
+    "raw_text": "Walmart reported resilient sales and improved its annual outlook, supported by steady consumer demand and operational execution.",
+    "entities": [],
+    "tickers": [
+      "WMT"
+    ],
+    "url": null
+  }
+]

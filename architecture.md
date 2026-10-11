@@ -1,6 +1,6 @@
 # EventPulse Architecture
 
-EventPulse converts public financial headlines and corporate filings into structured event signals, then demonstrates two downstream risk workflows. The Mermaid diagram below is the source-of-truth architecture view; `docs/architecture.png` is its presentation-ready companion image.
+EventPulse converts public financial headlines and corporate filings into structured event signals, then demonstrates two downstream risk workflows. The Mermaid diagram below is the source-of-truth architecture view; `docs/architecture.svg` is its rendered vector companion image.
 
 ```mermaid
 flowchart TB
@@ -34,7 +34,7 @@ flowchart TB
 
     subgraph ACTIONS["5. Downstream simulations"]
         A["Module A\nLong-only mock-index rebalancer\nWeight bounds + 10% one-way turnover cap"]
-        B["Module B\nSynthetic banking portfolio stress tester\nCategory / impact scenario triggers"]
+        B["Module B\nSynthetic banking stress tester\nNegative sentiment + category + impact gates\nDerivative shock proxy"]
     end
 
     subgraph PRESENT["6. Outputs and presentation"]
@@ -83,7 +83,7 @@ flowchart TB
 - **Distinct source and processed state:** archiving a record does not imply that the NLP and downstream cycle completed.
 - **Explicit source provenance:** timestamps, source names, URLs and ticker metadata remain attached where supplied.
 - **Point-in-time clustering signals:** the engine considers only articles available as of an article's publication time when calculating novelty and corroboration, reducing future-report leakage.
-- **Constrained simulations:** Module A enforces long-only weight bounds and a one-way turnover cap; Module B uses declared synthetic scenario assumptions.
+- **Constrained simulations:** Module A enforces long-only weight bounds and a one-way turnover cap, uses event-specific decay once, and emits progressive replay snapshots. Module B requires negative sentiment for downside scenarios and uses explicitly configured synthetic shocks, including a simplified derivative proxy.
 - **Honest model status:** the currently active impact score is an interpretable heuristic. The historical training workflow exists, but a trained/accepted impact-model artifact is not included in the repository version reviewed.
 
 ## Model inventory
@@ -100,6 +100,6 @@ flowchart TB
 ## Execution paths
 
 - **Live:** `python -m src.engine.run_live_pipeline --limit 10 --timespan 1day`. Uses public feeds and the live 12-stock mock-index universe. It does not silently substitute synthetic data when a live source fails.
-- **Synthetic replay:** `python -m src.engine.run_demo_pipeline`. Uses `data/demo/articles.json` plus the fictional portfolio and synthetic banking scenario data. Outputs are written under `data/processed/demo_replay/` (ignored by Git) and read by `src/dashboard/app.py`.
+- **Synthetic replay:** `python -m src.engine.run_demo_pipeline`. Uses `data/demo/index_articles.json` (synthetic headlines with tickers from the configured 12-stock mock-index universe), `data/demo/index_portfolio.json`, and the USD-denominated synthetic banking portfolio/scenarios. Outputs are written under `data/processed/demo_replay/` (ignored by Git) and read by `src/dashboard/app.py`.
 - **Dashboard:** `python -m streamlit run src/dashboard/app.py`. The Streamlit page displays the saved synthetic replay; it does not run transformer inference on each refresh.
 - **API:** `uvicorn src.api.main:app --reload`. A read-only API over the persisted outputs.
