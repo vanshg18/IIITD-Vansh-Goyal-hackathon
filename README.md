@@ -130,6 +130,20 @@ python -m pytest -q
 
 Observed local run on the updated review branch: **89 passed, 1 warning**. The warning is a Starlette/HTTPX test-client deprecation warning. These tests check software behaviour; they are not real-world NLP accuracy metrics.
 
+## Downstream Modules
+
+### Module A - constrained mock-index rebalancing
+
+The synthetic end-to-end replay uses `data/demo/index_portfolio.json`: 12 real ticker symbols with equal initial weights for demonstration, **not official S&P Global 100 weights**. Synthetic headlines in `data/demo/index_articles.json` use ticker symbols in that universe so the replay can demonstrate asset matching. The rebalancer combines signed sentiment with impact, confidence, novelty and the event-specific decay factor, collapses repeated reports by cluster/ticker, enforces long-only holding bounds, and caps one-way turnover at 10%. The updated replay saves three progressive snapshots for a weights-over-time chart. No orders are sent to a broker and no investment performance is claimed.
+
+### Module B - synthetic wholesale-bank stress testing
+
+The banking fixture in `data/demo/banking_portfolio.json` is synthetic and denominated in USD, with nine positions across loans, government/corporate bonds, equities, cash and a derivative exposure **shock proxy**. A downside scenario requires a matching event category, a minimum impact score, and negative sentiment. Scenario shocks are explicitly configured in `data/demo/bank_stress_scenarios.json`; outputs include before/after portfolio value, simulated loss, and position-level attribution. Derivative exposure uses an explicit configured return-shock proxy, **not** option pricing, Greeks, margin or collateral modelling. Scenario results are independent runs against the same starting portfolio; do not add the losses together.
+
+### Dataset scope
+
+No Kaggle transaction dataset, real historical news corpus, or real historical price series was used to produce the reported replay metrics. The submitted data are the small synthetic headline/portfolio/scenario fixtures plus live-source adapters that fetch public GDELT/SEC data at runtime. The historical impact-model training workflow is optional and has not produced an accepted model artifact in the reviewed version.
+
 ## 5. Key Results & Domain Impact
 
 ### Synthetic end-to-end replay
