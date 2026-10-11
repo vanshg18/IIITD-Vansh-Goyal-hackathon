@@ -35,7 +35,6 @@ data/processed/*
 *.csv.gz
 
 # Model checkpoints
-# Model checkpoints
 models/*
 !models/.gitkeep
 !models/registry.json
@@ -44,7 +43,6 @@ models/*
 *.pth
 *.bin
 *.safetensors
-
 
 # Temporary outputs
 outputs/
