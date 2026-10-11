@@ -54,12 +54,13 @@ The repository includes a small, fully synthetic dataset for repeatable demonstr
 
 | File | Nature and role |
 |---|---|
-| `data/demo/articles.json` | 12 hand-authored fictional financial headlines/articles with synthetic timestamps and fictional companies/tickers. This is the input for the current end-to-end demo replay. |
+| `data/demo/index_articles.json` | 12 hand-authored synthetic financial headlines with timestamps and real ticker symbols from the 12-stock mock-index universe. This is the current end-to-end demo input; these are not real news reports. |
+| `data/demo/articles.json` | Legacy fully synthetic/fictitious-company article fixtures used by older demo helpers and classifier smoke tests. |
 | `data/demo/event_eval.json` | Expected event labels for the 12 synthetic article IDs. It is a small synthetic smoke-test fixture, not an independently labelled real-news benchmark. |
-| `data/demo/portfolio.json` | Fictional company portfolio used by the synthetic Module A replay (for example, QDEV, NVBK, MCRD and CLMX). |
-| `data/demo/banking_portfolio.json` | Synthetic banking portfolio with eight positions and a declared aggregate value of 1,000,000,000 portfolio units. The file currently does not declare a currency. |
+| `data/demo/portfolio.json` | Legacy fictional-company portfolio retained for other demo/fixture helpers; the current end-to-end replay uses `index_portfolio.json`. |
+| `data/demo/banking_portfolio.json` | Synthetic USD banking portfolio with nine positions, including loans, government/corporate bonds, equities, cash and a simplified derivative exposure proxy; total assets are USD 1,000,000,000. |
 | `data/demo/bank_stress_scenarios.json` | Synthetic event categories, impact thresholds and assumed shocks used by Module B. |
-| `data/demo/index_portfolio.json` | Separate 12-stock real-ticker mock-index universe for the live pipeline. Equal weights are a simulation and are not official S&P Global 100 index weights. |
+| `data/demo/index_portfolio.json` | 12-stock real-ticker mock-index universe used by both the current synthetic replay and live pipeline. Equal weights are a simulation, not official S&P Global 100 index weights. |
 | `data/demo/stress_scenarios.json` | Additional/legacy synthetic scenario fixture used by the demo ingestion helper; the current `run_demo_pipeline` uses `bank_stress_scenarios.json` for Module B. |
 
 **Live sources:** GDELT DOC public news metadata and SEC EDGAR current 8-K filings; an Alpha Vantage feed is optional and requires an API key. Source data are fetched at runtime, subject to provider connectivity and rate limits. GDELT may return a headline rather than the full article body.
@@ -145,14 +146,14 @@ Observed from `python -m src.engine.run_demo_pipeline` and displayed in the Stre
 | Module B stress scenarios triggered | 2 |
 | Software tests | 81 passed, 1 warning |
 
-The two independently evaluated synthetic Module B scenarios were:
+The following values were observed on the original fictional-company fixture before the last-minute real-ticker replay and derivative portfolio update. **Rerun the current branch and replace this table with the fresh run output before submission.** The two scenarios are independently evaluated and are not cumulative:
 
 | Scenario | Trigger event / impact | Portfolio before | Portfolio after | Simulated loss |
 |---|---|---:|---:|---:|
 | Broad Credit Deterioration | Credit / 8.86 out of 10 | 1,000,000,000 | 929,056,000 | 70,944,000 (7.0944%) |
 | Unexpected Monetary Tightening | Monetary Policy / 8.24 out of 10 | 1,000,000,000 | 944,540,000 | 55,460,000 (5.5460%) |
 
-Amounts are generic portfolio units because the current synthetic bank fixture does not declare a currency. The two stress outcomes are separate hypothetical scenarios against the same starting portfolio, not cumulative losses and not forecasts of an actual bank.
+These original-run amounts are now denominated in USD by the updated synthetic bank fixture; however, the table above is from the prior portfolio configuration and is retained only as a historical reference. Do not present those exact amounts as the output of the updated branch. The scenarios are hypothetical, independent, and not forecasts of an actual bank.
 
 ### Live-source smoke test observed during development
 
@@ -193,7 +194,7 @@ Review `data/processed/impact_model_metrics.json`. The code accepts a model only
 - GDELT may be rate-limited, and metadata-only headlines can lack the context available in full article text.
 - Module A uses simulated weights, not official index weights or actual trades.
 - Module B uses a synthetic banking portfolio and manually configured scenario shocks. It is not a valuation of a real bank.
-- The Streamlit dashboard is a **local synthetic demo**, not a deployed cloud service. Cloud deployment is not specified as a requirement in the provided submission guidelines. Because `data/processed/` is Git-ignored, a fresh cloud deployment would need tracked demo results or a documented generation step.
+- The Streamlit dashboard is a **local synthetic replay** and reads generated outputs under `data/processed/demo_replay/`. It is not a deployed cloud service and does not currently display the live API's outputs. Run the demo pipeline after cloning before starting Streamlit.
 
 ## Submission and links
 
