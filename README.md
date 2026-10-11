@@ -1,176 +1,209 @@
-# EventPulse — S&P Global & Crisil Campus Hackathon
+# EventPulse - S&P Global & Crisil Campus Hackathon 2026
 
-> **From Headlines → Events → Impact → Action**
+> **From headlines to events to impact to action.**
 
-EventPulse converts unstructured financial news and corporate disclosures into structured, explainable event signals. Signals can feed a constrained mock-index rebalancer (Module A) and a synthetic banking portfolio stress tester (Module B).
+**Candidate Name:** Vansh Goyal  
+**College Email ID:** vansh23577@iiitd.ac.in 
+**College / Campus:** IIIT Delhi  
+**Demo Video Link (YouTube Unlisted):** _TODO: add after recording the 10-minute walkthrough_  
+**Slide Deck:** [Presentation PDF](docs/presentation.pdf) | [Editable PowerPoint](docs/presentation.pptx)  
+**Architecture:** [Mermaid source](architecture.md) | [Rendered diagram](docs/architecture.png)  
+**Public Repository:** https://github.com/vanshg18/IIITD-Vansh-Goyal-hackathon
 
-## Current implementation
+## 1. Project Overview / Problem Statement & Approach
 
-- **Ingestion:** GDELT DOC public news API, SEC EDGAR current 8-K filings, and optional Alpha Vantage news.
-- **Traceability:** normalized article IDs, source names, source URLs, timestamps, ticker metadata when available, and JSONL persistence.
-- **NLP:** FinBERT sentiment, a finance-topic/zero-shot event classifier router, entity/ticker resolution, and semantic clustering.
-- **Impact:** the current 1–10 impact score is an interpretable heuristic baseline. It is **not yet trained or calibrated against historical market reactions**.
-- **Reproducibility:** synthetic fixtures remain available for unit tests; live mode never silently replaces missing live data with synthetic data.
+Financial-risk teams need to triage a continuous stream of financial news and corporate disclosures. Raw headlines are unstructured, several outlets may report the same event, and linguistic sentiment alone does not explain which company is involved or whether an event should trigger a downstream risk workflow.
 
-## Setup
+EventPulse ingests public news and SEC filings, normalizes them into a shared article schema, and applies pretrained NLP models for financial sentiment, entity extraction, financial-topic classification, zero-shot event classification, and semantic embeddings. A confidence-aware router and time-aware clustering logic turn these outputs into structured `FinancialEvent` signals with source provenance, tickers, sentiment, event type, novelty/corroboration metadata, and an interpretable 1-10 impact score.
 
-Use Python 3.11 or 3.12 in a virtual environment:
+The same event contract feeds two simulations: **Module A**, a constrained mock-index rebalancer, and **Module B**, a scenario-triggered stress tester for a synthetic banking portfolio. A Streamlit dashboard visualizes the reproducible synthetic end-to-end replay. This is a risk-intelligence prototype, not an automated trading system or validated market-loss predictor.
 
-~~~bash
-python -m venv .venv
-# Windows PowerShell
-.venv\Scripts\Activate.ps1
-# macOS/Linux
-# source .venv/bin/activate
+## 2. Architecture & Tech Stack
 
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-~~~
+![EventPulse architecture](docs/architecture.png)
 
-Copy .env.example to .env. For SEC EDGAR, replace SEC_USER_AGENT with a descriptive application name and a real contact email, for example:
+Full Mermaid source and detailed components: [`architecture.md`](architecture.md); standalone diagram source: [`docs/architecture.mmd`](docs/architecture.mmd).
 
-~~~dotenv
-SEC_USER_AGENT=EventPulse/1.0 Your Name your.email@example.com
-~~~
+### Technology stack
 
-The optional Alpha Vantage feed is only enabled when ALPHAVANTAGE_API_KEY is set. The GDELT adapter needs no API key. SEC requests identify the application through the configured User-Agent.
+- **Python 3.11/3.12:** orchestration, data models and simulation logic.
+- **Pydantic:** validated `Article`, `FinancialEvent`, and portfolio schemas.
+- **Hugging Face Transformers / PyTorch:** pretrained NLP inference.
+- **Sentence Transformers / scikit-learn:** embeddings, cosine similarity and clustering utilities.
+- **Pandas / NumPy / SciPy:** data handling and numerical portfolio calculations.
+- **FastAPI / Uvicorn:** optional read-only API over saved output files.
+- **Streamlit / Plotly:** local dashboard and interactive charts.
+- **JSON / JSONL:** article archive, event outputs, portfolio snapshots, and scenario history.
 
-## Run ingestion
+### Model inventory and purpose
 
-Fetch real news and public SEC filings, persist new records to data/processed/live_articles.jsonl, and report every source's status:
+| Model / component | Purpose | Status |
+|---|---|---|
+| `ProsusAI/finbert` | Financial sentiment; signed score in `[-1, 1]` | Pretrained inference |
+| `whataboutyou-ai/financial_bert` | Financial named-entity extraction | Pretrained inference |
+| `leonas5555/finnews-topic-single-classify` | Financial-news topic classification | Pretrained inference |
+| `MoritzLaurer/ModernBERT-base-zeroshot-v2.0` | Scores candidate event-category descriptions | Pretrained inference; combined by router |
+| `BAAI/bge-small-en-v1.5` | Text embeddings for semantic similarity | Pretrained general-purpose English embedding model |
+| `src/engine/impact.py` | Explainable 1-10 impact estimate | Heuristic baseline currently active |
 
-~~~bash
-python -m src.ingestion.run_ingestion --mode live --limit 20 --timespan 1day
-~~~
+The event router uses model agreement, confidence thresholds, and the margin between the leading zero-shot labels as routing evidence. These are fixed design rules, not learned/calibrated probabilities. The active impact score is a severity/confidence heuristic. A historical impact-training workflow is present, but the reviewed repository does **not** contain an accepted `models/impact_model.joblib` artifact, so the live engine uses the heuristic baseline.
 
-Try a shorter GDELT window or custom query:
+## 3. Dataset Used
 
-~~~bash
-python -m src.ingestion.run_ingestion --mode live --limit 10 --timespan 6h --query '("stock market" OR earnings OR "central bank")'
-~~~
+The repository includes a small, fully synthetic dataset for repeatable demonstrations; it does not include proprietary S&P Global or Crisil data.
 
-Run offline synthetic fixtures explicitly:
+| File | Nature and role |
+|---|---|
+| `data/demo/articles.json` | 12 hand-authored fictional financial headlines/articles with synthetic timestamps and fictional companies/tickers. This is the input for the current end-to-end demo replay. |
+| `data/demo/event_eval.json` | Expected event labels for the 12 synthetic article IDs. It is a small synthetic smoke-test fixture, not an independently labelled real-news benchmark. |
+| `data/demo/portfolio.json` | Fictional company portfolio used by the synthetic Module A replay (for example, QDEV, NVBK, MCRD and CLMX). |
+| `data/demo/banking_portfolio.json` | Synthetic banking portfolio with eight positions and a declared aggregate value of 1,000,000,000 portfolio units. The file currently does not declare a currency. |
+| `data/demo/bank_stress_scenarios.json` | Synthetic event categories, impact thresholds and assumed shocks used by Module B. |
+| `data/demo/index_portfolio.json` | Separate 12-stock real-ticker mock-index universe for the live pipeline. Equal weights are a simulation and are not official S&P Global 100 index weights. |
+| `data/demo/stress_scenarios.json` | Additional/legacy synthetic scenario fixture used by the demo ingestion helper; the current `run_demo_pipeline` uses `bank_stress_scenarios.json` for Module B. |
 
-~~~bash
-python -m src.ingestion.run_ingestion --mode demo --limit 5 --output data/processed/demo_articles.jsonl
-~~~
+**Live sources:** GDELT DOC public news metadata and SEC EDGAR current 8-K filings; an Alpha Vantage feed is optional and requires an API key. Source data are fetched at runtime, subject to provider connectivity and rate limits. GDELT may return a headline rather than the full article body.
 
-To require every configured source to work, add --require-all-sources. Without it, a failed source is reported and other working sources can continue. If no live articles are fetched, the command exits non-zero; it does not fall back to demo inputs.
+**Historical data:** no real historical news or price dataset is bundled or claimed as training data. The repository includes scripts to score a public historical-news dataset and train/evaluate a historical impact model if you provide licensed data under `data/raw/`. The README's example FNSPID workflow is a suggested future experiment, not evidence that FNSPID was used in the results below. Verify the license and terms of any external dataset before use. Raw downloads and generated outputs are ignored by Git.
 
-## Run the complete live risk-engine cycle
+## 4. Quickstart & Installation
 
-This is the primary real-data command. It fetches from GDELT and SEC EDGAR (plus Alpha Vantage when configured), runs the pretrained intelligence pipeline on not-yet-processed articles, then updates Module A and triggers Module B stress scenarios where the signal qualifies:
+### Runtime
 
-~~~bash
+Python 3.11 or 3.12. The development run was performed on Windows in a Python virtual environment. A first run downloads pretrained model weights and needs network access; later runs can reuse the local model cache.
+
+### Install on Windows Command Prompt (CMD)
+
+```cmd
+ git clone https://github.com/vanshg18/IIITD-Vansh-Goyal-hackathon.git
+ cd IIITD-Vansh-Goyal-hackathon
+ python -m venv .venv
+ .venv\Scripts\activate
+ python -m pip install --upgrade pip
+ python -m pip install -r requirements.txt
+```
+
+PowerShell users can activate with `.venv\Scripts\Activate.ps1` instead.
+
+### Run the reproducible synthetic end-to-end demo
+
+Run the pipeline **before** starting Streamlit because generated outputs under `data/processed/` are intentionally ignored by Git.
+
+```cmd
+python -m src.engine.run_demo_pipeline
+python -m streamlit run src/dashboard/app.py
+```
+
+The dashboard has three tabs: Risk Feed, Module A - Rebalancer, and Module B - Stress Test. It reads saved replay outputs and does not load transformer models for each dashboard refresh. All displayed results are labelled synthetic simulations.
+
+### Run live ingestion and downstream processing
+
+1. Copy `.env.example` to `.env`.
+2. Replace the example `SEC_USER_AGENT` with a descriptive application name and your real contact email, e.g. `SEC_USER_AGENT=EventPulse/1.0 Your Name your.email@college.example`. Do not commit `.env` or share credentials.
+3. `ALPHAVANTAGE_API_KEY` may remain empty; that feed is optional. GDELT needs no API key.
+4. Run:
+
+```cmd
 python -m src.engine.run_live_pipeline --limit 10 --timespan 1day
-~~~
+```
 
-Outputs are stored under `data/processed/` (ignored by Git):
+The run writes outputs under `data/processed/`: `live_articles.jsonl`, `processed_articles.json`, `latest_events.jsonl`, `events_history.jsonl`, `latest_rebalance.json`, `rebalance_history.jsonl`, `index_portfolio_state.json`, `latest_stress_results.jsonl`, `stress_results_history.jsonl`, and `latest_cycle_status.json`.
 
-- `live_articles.jsonl`: deduplicated raw article archive.
-- `processed_articles.json`: fingerprints of items whose NLP and downstream cycle completed. This is separate from raw archival so items previously saved by the ingestion-only command can still be processed.
-- `latest_events.jsonl` and `events_history.jsonl`: canonical financial event signals.
-- `latest_rebalance.json`, `rebalance_history.jsonl`, and `index_portfolio_state.json`: Module A outputs and persistent simulated weights.
-- `latest_stress_results.jsonl` and `stress_results_history.jsonl`: Module B outcomes and history.
-- `latest_cycle_status.json`: completion status and per-source success/errors for the most recent run.
+A source can fail while another source continues. Inspect `latest_cycle_status.json` for each source's status. HTTP 429 means a provider is rate-limiting requests; avoid repeated rapid retries. Live mode does not silently switch to synthetic fixtures.
 
-Overlapping news windows do not reapply already processed articles, and the index simulation state persists across runs. If you intentionally want to start the mock index from equal weights, back up and remove `index_portfolio_state.json`; do not delete the processed registry unless you also intend to reprocess old stories.
+### Optional: read-only API
 
-Transformer weights are downloaded by the NLP libraries on the first full run, so that run can take longer. Live provider connectivity is still dependent on network access and valid source configuration.
+After a live or synthetic cycle has generated the expected files, start the API:
 
-The lower-level NLP-only command remains available when you only want to emit event signals:
+```cmd
+python -m uvicorn src.api.main:app --reload
+```
 
-~~~bash
-python -m src.engine.run_live_intelligence --limit 10 --timespan 1day
-~~~
+Open `http://127.0.0.1:8000/docs` for interactive API documentation. Routes include `/api/v1/health`, `/api/v1/cycle/latest`, `/api/v1/events/latest`, `/api/v1/events/history`, `/api/v1/module-a/latest`, `/api/v1/module-a/history`, `/api/v1/module-b/latest`, `/api/v1/module-b/history`, and `/api/v1/summary`.
 
-## Read signals over the API
+### Tests
 
-After running the live cycle at least once, start the file-backed read-only API:
+```cmd
+python -m pytest -q
+```
 
-~~~bash
-uvicorn src.api.main:app --reload
-~~~
+Observed local run: **81 passed, 1 warning**. The warning is a Starlette/HTTPX test-client deprecation warning. These tests check software behaviour; they are not real-world NLP accuracy metrics.
 
-FastAPI docs: `http://127.0.0.1:8000/docs`
+## 5. Key Results & Domain Impact
 
-Endpoints include:
+### Synthetic end-to-end replay
 
-- `GET /api/v1/health` and `GET /api/v1/cycle/latest`: service/artifact status and per-source outcomes.
-- `GET /api/v1/events/latest` and `GET /api/v1/events/history?limit=100`: structured event signals.
-- `GET /api/v1/module-a/latest` and `GET /api/v1/module-a/history?limit=100`: weights, signal changes and turnover.
-- `GET /api/v1/module-b/latest` and `GET /api/v1/module-b/history?limit=100`: triggered synthetic portfolio stress results.
-- `GET /api/v1/summary`: event-type counts, average sentiment/impact, and stress-test counts.
+Observed from `python -m src.engine.run_demo_pipeline` and displayed in the Streamlit app:
 
-The API reads persisted files and does not load transformer models per request. Refresh the signals by running the live-cycle command separately.
+| Measure | Observed result |
+|---|---:|
+| Synthetic articles loaded | 12 |
+| Structured events emitted | 12 |
+| Events used by Module A | 5 |
+| Module A one-way turnover | 9.15% |
+| Configured Module A turnover cap | 10% |
+| Module B stress scenarios triggered | 2 |
+| Software tests | 81 passed, 1 warning |
 
-## Downstream modules
+The two independently evaluated synthetic Module B scenarios were:
 
-### Module A — sentiment-responsive mock-index rebalancing
+| Scenario | Trigger event / impact | Portfolio before | Portfolio after | Simulated loss |
+|---|---|---:|---:|---:|
+| Broad Credit Deterioration | Credit / 8.86 out of 10 | 1,000,000,000 | 929,056,000 | 70,944,000 (7.0944%) |
+| Unexpected Monetary Tightening | Monetary Policy / 8.24 out of 10 | 1,000,000,000 | 944,540,000 | 55,460,000 (5.5460%) |
 
-The separate Module A portfolio contains 12 real large-cap tickers associated with the S&P Global 100 constituent universe. Starting weights are equal-weighted for the simulation and **are not official index weights**. The rebalancer applies sentiment/impact signals, deduplicates repeat reports by cluster, normalizes weights, enforces configurable minimum/maximum asset weights, and caps one-way turnover. Unmatched tickers are reported rather than silently included.
+Amounts are generic portfolio units because the current synthetic bank fixture does not declare a currency. The two stress outcomes are separate hypothetical scenarios against the same starting portfolio, not cumulative losses and not forecasts of an actual bank.
 
-### Module B — synthetic wholesale-bank stress testing
+### Live-source smoke test observed during development
 
-Module B uses the explicitly synthetic portfolio in data/demo/banking_portfolio.json. High-impact event classes trigger named scenario rules from data/demo/bank_stress_scenarios.json. The model applies sector/equity shocks, duration-based bond repricing, spread widening, and incremental loan default-rate assumptions, then calculates before/after value and position-level loss attribution. Scenario inputs are assumptions for stress testing, not estimates of actual bank holdings or forecasts.
+A live run successfully fetched **10 SEC EDGAR records**. GDELT returned **HTTP 429** (rate limited) in that run. The engine generated 10 structured events, but Module A used zero events because the reported tickers did not match the separate 12-stock mock-index portfolio, and Module B triggered zero scenarios because those event categories/impact scores did not meet the configured rules. This demonstrates source status reporting and strict eligibility, not successful live downstream action for that particular batch.
 
-## Canonical signal output
+### Domain impact
 
-Each structured event includes its event timestamp and source provenance, title/text, tickers, event classification and confidence, sentiment in [-1, 1], impact score in [1, 10], novelty/corroboration/time-decay metadata, and cluster identifiers.
+- Provides a common event schema so multiple downstream workflows can reuse NLP outputs.
+- Preserves source provenance and timestamps to support review and traceability.
+- Reduces duplicate influence by clustering related reports and limiting same-cluster contributions.
+- Demonstrates constrained portfolio rebalancing and scenario-based loss attribution.
+- Offers repeatable synthetic results for a reliable walkthrough when a live provider is rate-limited.
 
-Example commands for the existing synthetic NLP path:
+## Optional historical-impact model workflow (not used for the reported demo metrics)
 
-~~~bash
-python -m src.engine.run_intelligence_demo
-python -m src.nlp.run_pretrained_demo
-~~~
+The repository includes scripts for an optional historical impact experiment. This requires you to obtain an appropriately licensed public news dataset and historical prices; neither is bundled or claimed as having been used for the demo results above. Keep downloads under `data/raw/` locally (that directory is Git-ignored).
 
-## Testing
+1. Score a deterministic sample of news with the same NLP models used in inference:
 
-The ingestion tests are network-independent and mock GDELT/SEC API responses:
+```cmd
+python -m src.ml.score_historical_news --input data/raw/your_news.csv --tickers AAPL,MSFT,NVDA,AMZN,JPM --limit 2000 --sample-seed 42 --device -1
+```
 
-~~~bash
-pytest -q tests/test_ingestion.py tests/test_live_ingestion.py
-~~~
+2. Build targets and train/evaluate against historical prices:
 
-Run the complete suite after installing all project dependencies:
+```cmd
+python -m src.ml.train_market_impact --prices data/raw/your_prices.zip --benchmark-tickers AAPL,MSFT,NVDA,AMZN,JPM
+```
 
-~~~bash
-pytest -q
-~~~
+Review `data/processed/impact_model_metrics.json`. The code accepts a model only when validation MAE beats a training-median baseline and the feature schema matches live inference. This workflow has **not** produced the accepted model artifact used for the current reported results; the heuristic remains active. Daily close data are only a proxy for event reaction timing, not causal attribution.
 
-## Train an impact model from historical data
+## Limitations and honest evaluation status
 
-The historical model uses a market-observable target: the magnitude of a ticker's next-session abnormal return relative to the equal-weight return of the loaded comparison universe. It trains on EventPulse outputs, not hand-written synthetic impact labels. The resulting score is a relative 1–10 rank; it is not a probability or causal claim.
+- FinBERT sentiment is not a stock-return prediction.
+- The 1-10 impact score is a configurable heuristic, not a calibrated probability or expected loss.
+- The small synthetic fixture set is for demonstrating code paths and smoke-testing; no independent real-headline accuracy/precision/recall/F1 or economic backtest result is claimed here.
+- The historical impact model workflow requires external historical news and prices and a successful acceptance check; no accepted model artifact is included in the reviewed repository version.
+- GDELT may be rate-limited, and metadata-only headlines can lack the context available in full article text.
+- Module A uses simulated weights, not official index weights or actual trades.
+- Module B uses a synthetic banking portfolio and manually configured scenario shocks. It is not a valuation of a real bank.
+- The Streamlit dashboard is a **local synthetic demo**, not a deployed cloud service. Cloud deployment is not specified as a requirement in the provided submission guidelines. Because `data/processed/` is Git-ignored, a fresh cloud deployment would need tracked demo results or a documented generation step.
 
-The historical scorer selects a deterministic hash-based sample across the whole input CSV, rather than simply taking its first rows. Set `--sample-seed` to reproduce a different sample. The model deliberately trains only on features available in both historical scoring and live inference: sentiment score, sentiment confidence, event-classification confidence, ticker, and event type. Cluster size, corroboration, novelty, decay, and historical volatility are retained in the dataset for analysis but excluded from this model until they can be reconstructed point-in-time in training and supplied consistently at live inference.
+## Submission and links
 
-For a practical first experiment, use a small ticker universe and a few thousand news records. FNSPID is one possible public starting point; fetch data from its upstream repository (https://github.com/Zdong104/FNSPID_Financial_News_Dataset) and verify the dataset license/terms before use. Keep raw downloads outside Git, e.g. under data/raw/.
+- Slide deck: [`docs/presentation.pdf`](docs/presentation.pdf) (7 slides; within the 5-7-slide guideline).
+- Editable deck: [`docs/presentation.pptx`](docs/presentation.pptx).
+- Architecture: [`architecture.md`](architecture.md) and [`docs/architecture.png`](docs/architecture.png).
+- 10-minute walkthrough script: [`docs/demo_walkthrough_script.md`](docs/demo_walkthrough_script.md).
+- 5-minute live demo script: [`docs/live_demo_5min_script.md`](docs/live_demo_5min_script.md).
+- **Demo video:** replace the placeholder at the top with the final 10-minute YouTube Unlisted link. Test that it plays in a private/incognito window before submitting.
 
-1. Score a deterministic sample of historical news with the same FinBERT and event router used in EventPulse. The entire CSV is scanned to select a representative sample, so processing a multi-million-row dataset may take time even when `--limit` is small:
+## Data, licensing and responsible use
 
-~~~bash
-python -m src.ml.score_historical_news --input data/raw/nasdaq_exteral_data.csv --tickers AAPL,MSFT,NVDA,AMZN,JPM --limit 2000 --sample-seed 42 --device 0
-~~~
-
-2. Label those structured events against historical prices. The price input may be a long CSV, a directory of per-ticker CSVs, or a ZIP of per-ticker CSVs:
-
-~~~bash
-python -m src.ml.train_market_impact --prices data/raw/full_history.zip --benchmark-tickers AAPL,MSFT,NVDA,AMZN,JPM
-~~~
-
-3. Inspect data/processed/impact_model_metrics.json. The artifact is only enabled for live inference if its validation MAE beats the training-median baseline. The final test block is chronological and is not used to choose acceptance.
-
-The target uses daily close-to-close returns. For US-listed equities, publication timestamps before 16:00 America/New_York anchor strictly to the prior close, and post-close timestamps anchor to that day's close; weekend and holiday news use the latest available close. Daily bars cannot precisely identify intraday reaction timing, so this remains a proxy, not causal attribution. For a larger or serious financial evaluation, prefer timestamped intraday prices and a longer date range. If the model does not beat the baseline, EventPulse deliberately continues to use the transparent heuristic impact score.
-
-## Important modeling limitations
-
-- FinBERT linguistic sentiment is not the same as a forecast of price direction.
-- The current impact score is a severity/confidence heuristic; do not interpret it as a calibrated probability or expected loss.
-- Real-data classification quality must be measured on independently labeled real headlines. The small synthetic fixture benchmark is a smoke test, not evidence of real-world accuracy.
-- A historical impact model should be trained with time-ordered splits and a documented news-availability cutoff to prevent look-ahead leakage.
-- Module B uses a synthetic banking portfolio and explicit scenario assumptions. It is a stress-test simulation, not a valuation of a real bank.
-
-## Data and responsible use
-
-Do not commit API keys, private customer data, model checkpoints, or large downloaded datasets. Follow each data provider's terms, rate limits, and attribution requirements. This repository does not contain proprietary S&P Global or Crisil data.
+The repo includes an MIT license. Use only synthetic or publicly available data, follow provider terms/rate limits, and do not commit API keys, `.env`, private data, downloaded model checkpoints or large datasets. No proprietary or confidential S&P Global or Crisil data are included.
