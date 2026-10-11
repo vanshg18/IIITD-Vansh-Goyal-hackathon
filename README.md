@@ -5,7 +5,7 @@
 **Candidate Name:** Vansh Goyal  
 **College Email ID:** vansh23577@iiitd.ac.in 
 **College / Campus:** IIIT Delhi  
-**Demo Video Link (YouTube Unlisted):** _TODO: add after recording the 10-minute walkthrough_  
+**Demo Video Link (YouTube Unlisted):** https://youtu.be/_MlgaZgMtWA
 **Slide Deck:** [Presentation PDF](docs/presentation.pdf) | [Editable PowerPoint](docs/presentation.pptx)  
 **Architecture:** [Mermaid source](architecture.md) | [Rendered diagram](docs/architecture.svg)  
 **Public Repository:** https://github.com/vanshg18/IIITD-Vansh-Goyal-hackathon
