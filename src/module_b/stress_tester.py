@@ -259,6 +259,11 @@ class PortfolioStressTester:
                 allowed = {value.strip().lower() for value in rule.event_types}
                 if event_label not in allowed or event.impact.score < rule.minimum_impact:
                     continue
+                # All currently configured scenarios model adverse/downside
+                # conditions. A positive or neutral event must not trigger a
+                # deterioration scenario merely because its category matches.
+                if event.sentiment.score >= 0.0:
+                    continue
                 cluster_key = event.cluster_id or event.event_id
                 key = (cluster_key, rule.scenario_id)
                 previous = selected.get(key)
