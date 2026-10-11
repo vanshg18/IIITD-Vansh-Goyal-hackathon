@@ -169,7 +169,9 @@ class SentimentRebalancer:
             if not symbols:
                 continue
 
-            age_decay = math.exp(-math.log(2.0) * age_seconds / (24.0 * 3600.0))
+            # SignalMetadata.decay is already computed using the
+            # event-specific half-life by EventIntelligenceEngine. Do not
+            # multiply a second 24-hour half-life here.
             sign = float(np.clip(event.sentiment.score, -1.0, 1.0))
             confidence_scale = 0.5 + 0.5 * min(
                 1.0,
@@ -178,7 +180,7 @@ class SentimentRebalancer:
             impact_scale = float(np.clip(event.impact.score / 10.0, 0.0, 1.0))
             evidence_scale = 0.5 + 0.5 * float(np.clip(event.signal.novelty, 0.0, 1.0))
             decay_scale = float(np.clip(event.signal.decay, 0.0, 1.0))
-            event_strength = sign * impact_scale * confidence_scale * evidence_scale * decay_scale * age_decay
+            event_strength = sign * impact_scale * confidence_scale * evidence_scale * decay_scale
 
             for ticker in symbols:
                 if ticker not in holdings:
