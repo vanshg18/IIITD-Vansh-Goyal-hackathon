@@ -57,6 +57,7 @@ if st.button("Refresh saved results"):
 
 events = read_jsonl("events.jsonl")
 rebalance = read_json("rebalance.json")
+rebalance_history = read_jsonl("rebalance_history.jsonl")
 stress_results = read_jsonl("stress_results.jsonl")
 
 if not events or not rebalance:
@@ -72,7 +73,7 @@ c1, c2, c3, c4 = st.columns(4)
 c1.metric("Structured Events", len(events))
 c2.metric(
     "Events Used by Module A",
-    rebalance.get("processed_events", 0),
+    rebalance.get("processed_events_total", rebalance.get("processed_events", 0)),
 )
 c3.metric(
     "One-Way Turnover",
@@ -189,6 +190,33 @@ with tab_a:
         use_container_width=True,
         hide_index=True,
     )
+
+    st.subheader("Portfolio Weights Over Time")
+    if rebalance_history:
+        timeline_rows = []
+        for snapshot in rebalance_history:
+            for symbol, weight in snapshot.get("after_weights", {}).items():
+                timeline_rows.append({
+                    "Timestamp": snapshot.get("timestamp", ""),
+                    "Ticker": symbol,
+                    "Weight": weight,
+                })
+        timeline_df = pd.DataFrame(timeline_rows)
+        if not timeline_df.empty:
+            timeline_df["Timestamp"] = pd.to_datetime(timeline_df["Timestamp"], utc=True)
+            fig = px.line(
+                timeline_df.sort_values("Timestamp"),
+                x="Timestamp",
+                y="Weight",
+                color="Ticker",
+                markers=True,
+                title="Simulated Weight Changes Across Replay Stages",
+            )
+            fig.update_yaxes(tickformat=".1%")
+            st.plotly_chart(fig, use_container_width=True)
+            st.caption("Each point is a saved synthetic replay snapshot; it is not a live market history.")
+    else:
+        st.caption("No historical replay snapshots found. Rerun the synthetic demo pipeline to generate them.")
 
     unmatched = rebalance.get("unmatched_tickers", [])
     if unmatched:
