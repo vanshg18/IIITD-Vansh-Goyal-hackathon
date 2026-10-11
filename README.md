@@ -7,7 +7,7 @@
 **College / Campus:** IIIT Delhi  
 **Demo Video Link (YouTube Unlisted):** _TODO: add after recording the 10-minute walkthrough_  
 **Slide Deck:** [Presentation PDF](docs/presentation.pdf) | [Editable PowerPoint](docs/presentation.pptx)  
-**Architecture:** [Mermaid source](architecture.md) | [Rendered diagram](docs/architecture.png)  
+**Architecture:** [Mermaid source](architecture.md) | [Rendered diagram](docs/architecture.svg)  
 **Public Repository:** https://github.com/vanshg18/IIITD-Vansh-Goyal-hackathon
 
 ## 1. Project Overview / Problem Statement & Approach
@@ -20,7 +20,7 @@ The same event contract feeds two simulations: **Module A**, a constrained mock-
 
 ## 2. Architecture & Tech Stack
 
-![EventPulse architecture](docs/architecture.png)
+![EventPulse architecture](docs/architecture.svg)
 
 Full Mermaid source and detailed components: [`architecture.md`](architecture.md); standalone diagram source: [`docs/architecture.mmd`](docs/architecture.mmd).
 
@@ -200,7 +200,7 @@ Review `data/processed/impact_model_metrics.json`. The code accepts a model only
 
 - Slide deck: [`docs/presentation.pdf`](docs/presentation.pdf) (7 slides; within the 5-7-slide guideline).
 - Editable deck: [`docs/presentation.pptx`](docs/presentation.pptx).
-- Architecture: [`architecture.md`](architecture.md) and [`docs/architecture.png`](docs/architecture.png).
+- Architecture: [`architecture.md`](architecture.md) and [`docs/architecture.svg`](docs/architecture.svg).
 - 10-minute walkthrough script: [`docs/demo_walkthrough_script.md`](docs/demo_walkthrough_script.md).
 - 5-minute live demo script: [`docs/live_demo_5min_script.md`](docs/live_demo_5min_script.md).
 - **Demo video:** replace the placeholder at the top with the final 10-minute YouTube Unlisted link. Test that it plays in a private/incognito window before submitting.
