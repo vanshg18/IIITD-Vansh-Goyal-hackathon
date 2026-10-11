@@ -170,6 +170,18 @@ class PortfolioStressTester:
             )
             return 0.0, incremental_loss_rate
 
+        if asset_class in {"derivatives", "derivative"}:
+            # Simplified scenario shock proxy on the synthetic derivative
+            # exposure value. This is not a pricing model and does not
+            # incorporate option Greeks, collateral, or margin dynamics.
+            derivative_returns = shocks.get("derivative_returns", {})
+            return float(
+                derivative_returns.get(
+                    position.sector,
+                    asset_returns.get("derivatives", 0.0),
+                )
+            ), 0.0
+
         if asset_class == "cash":
             return float(asset_returns.get("cash", 0.0)), 0.0
 
