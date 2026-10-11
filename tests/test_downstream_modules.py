@@ -117,3 +117,47 @@ def test_low_impact_event_does_not_trigger_stress_test():
         make_event(event_id="geo_low", event_type="Geopolitical", impact=5.0)
     ])
     assert result == []
+
+def test_positive_credit_event_does_not_trigger_downside_stress():
+    tester = PortfolioStressTester()
+    result = tester.evaluate_events([
+        make_event(
+            event_id="credit_upgrade",
+            ticker="JPM",
+            sentiment=0.8,
+            event_type="Credit",
+            impact=9.5,
+        )
+    ])
+    assert result == []
+
+
+def test_neutral_regulatory_event_does_not_trigger_downside_stress():
+    tester = PortfolioStressTester()
+    result = tester.evaluate_events([
+        make_event(
+            event_id="regulatory_approval",
+            ticker="AAPL",
+            sentiment=0.0,
+            event_type="Regulatory",
+            impact=9.5,
+        )
+    ])
+    assert result == []
+
+
+def test_negative_high_impact_credit_event_triggers_downside_stress():
+    tester = PortfolioStressTester()
+    result = tester.evaluate_events([
+        make_event(
+            event_id="credit_downgrade",
+            ticker="JPM",
+            sentiment=-0.9,
+            event_type="Credit",
+            impact=9.1,
+        )
+    ])
+    assert len(result) == 1
+    assert result[0].scenario_id == "credit_deterioration"
+    assert result[0].net_loss > 0
+
