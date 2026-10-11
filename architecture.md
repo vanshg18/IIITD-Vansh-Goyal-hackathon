@@ -1,6 +1,6 @@
 # EventPulse Architecture
 
-EventPulse converts public financial headlines and corporate filings into structured event signals, then demonstrates two downstream risk workflows. The Mermaid diagram below is the source-of-truth architecture view; `docs/architecture.png` is its presentation-ready companion image.
+EventPulse converts public financial headlines and corporate filings into structured event signals, then demonstrates two downstream risk workflows. The Mermaid diagram below is the source-of-truth architecture view; `docs/architecture.svg` is its presentation-ready companion image.
 
 ```mermaid
 flowchart TB
