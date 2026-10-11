@@ -100,6 +100,6 @@ flowchart TB
 ## Execution paths
 
 - **Live:** `python -m src.engine.run_live_pipeline --limit 10 --timespan 1day`. Uses public feeds and the live 12-stock mock-index universe. It does not silently substitute synthetic data when a live source fails.
-- **Synthetic replay:** `python -m src.engine.run_demo_pipeline`. Uses `data/demo/articles.json` plus the fictional portfolio and synthetic banking scenario data. Outputs are written under `data/processed/demo_replay/` (ignored by Git) and read by `src/dashboard/app.py`.
+- **Synthetic replay:** `python -m src.engine.run_demo_pipeline`. Uses `data/demo/index_articles.json` (synthetic headlines assigned to the configured 12-stock ticker universe), `data/demo/index_portfolio.json`, and the USD-denominated synthetic banking portfolio and scenarios. Outputs are written under `data/processed/demo_replay/` (ignored by Git) and read by `src/dashboard/app.py`.
 - **Dashboard:** `python -m streamlit run src/dashboard/app.py`. The Streamlit page displays the saved synthetic replay; it does not run transformer inference on each refresh.
 - **API:** `uvicorn src.api.main:app --reload`. A read-only API over the persisted outputs.
