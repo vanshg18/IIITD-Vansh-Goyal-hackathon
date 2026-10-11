@@ -1,52 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1040" viewBox="0 0 1500 1040" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="980" viewBox="0 0 1500 980" role="img" aria-labelledby="title desc">
 <title id="title">EventPulse architecture</title>
-<desc id="desc">Public sources feed normalization and deduplication, then NLP event intelligence produces structured financial events consumed by a mock-index rebalancer and synthetic banking stress tester. Results feed JSON files, a read-only API and Streamlit.</desc>
-<defs>
-  <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#78a6d8"/></marker>
-  <style>
-    .bg{fill:#0b1220}.panel{fill:#111d2f;stroke:#385475;stroke-width:2}.source{fill:#142b45;stroke:#5794d6;stroke-width:2}.nlp{fill:#123b3a;stroke:#34c4aa;stroke-width:2}.event{fill:#2c2548;stroke:#b0a0ff;stroke-width:2}.module{fill:#152f4b;stroke:#6ca5e6;stroke-width:2}.out{fill:#1e2838;stroke:#91a8be;stroke-width:2}.warn{fill:#3a2b18;stroke:#e9b45d;stroke-width:2}.h{font:700 24px Arial,sans-serif;fill:#f0f6ff}.label{font:600 19px Arial,sans-serif;fill:#edf4ff}.small{font:16px Arial,sans-serif;fill:#c4d2e3}.sub{font:700 17px Arial,sans-serif;fill:#90a9c4}.arrow{stroke:#78a6d8;stroke-width:3;fill:none;marker-end:url(#arrow)}.dashed{stroke-dasharray:8 7}
-  </style>
-</defs>
-<rect class="bg" width="1500" height="1040" rx="22"/>
-<text x="70" y="58" class="h" style="font-size:34px">EventPulse | From Headlines → Events → Impact → Action</text>
-<text x="70" y="91" class="small">Public feeds + pretrained NLP + transparent signal rules + two constrained risk simulations</text>
-<!-- Sources -->
-<rect x="55" y="125" width="1390" height="122" rx="18" class="panel"/>
-<text x="80" y="156" class="sub">1 · INGESTION SOURCES</text>
-<rect x="90" y="175" width="370" height="52" rx="12" class="source"/><text x="275" y="198" text-anchor="middle" class="label">GDELT DOC API</text><text x="275" y="217" text-anchor="middle" class="small">Public news metadata</text>
-<rect x="565" y="175" width="370" height="52" rx="12" class="source"/><text x="750" y="198" text-anchor="middle" class="label">SEC EDGAR</text><text x="750" y="217" text-anchor="middle" class="small">Current 8-K filings</text>
-<rect x="1040" y="175" width="370" height="52" rx="12" class="source"/><text x="1225" y="198" text-anchor="middle" class="label">Alpha Vantage (optional)</text><text x="1225" y="217" text-anchor="middle" class="small">Requires API key</text>
-<!-- ingestion -->
-<path d="M275 247 V279 H750 V304 M750 247 V304 M1225 247 V279 H750" class="arrow"/>
-<rect x="300" y="304" width="900" height="96" rx="16" class="panel"/>
-<text x="750" y="337" text-anchor="middle" class="label">2 · Normalize, archive and deduplicate</text>
-<text x="750" y="365" text-anchor="middle" class="small">Article schema · IDs / timestamps / source URLs · JSONL archive · separate processed-fingerprint registry</text>
-<!-- NLP panel -->
-<path d="M750 400 V430" class="arrow"/>
-<rect x="55" y="430" width="1390" height="268" rx="18" class="panel"/>
-<text x="80" y="463" class="sub">3 · NLP + EVENT INTELLIGENCE</text>
-<rect x="90" y="485" width="400" height="75" rx="12" class="nlp"/><text x="290" y="514" text-anchor="middle" class="label">FinBERT</text><text x="290" y="539" text-anchor="middle" class="small">Financial sentiment ∈ [-1, 1]</text>
-<rect x="550" y="485" width="400" height="75" rx="12" class="nlp"/><text x="750" y="514" text-anchor="middle" class="label">Financial NER + ticker resolver</text><text x="750" y="539" text-anchor="middle" class="small">Names, entity merges, portfolio mapping</text>
-<rect x="1010" y="485" width="400" height="75" rx="12" class="nlp"/><text x="1210" y="514" text-anchor="middle" class="label">Topic model + zero-shot router</text><text x="1210" y="539" text-anchor="middle" class="small">Event class, evidence, confidence</text>
-<path d="M750 400 V470 H290 V485 M750 470 V485 M750 470 H1210 V485" class="arrow"/>
-<rect x="90" y="585" width="400" height="75" rx="12" class="nlp"/><text x="290" y="614" text-anchor="middle" class="label">BGE text embeddings</text><text x="290" y="639" text-anchor="middle" class="small">Semantic representation</text>
-<rect x="550" y="585" width="400" height="75" rx="12" class="nlp"/><text x="750" y="614" text-anchor="middle" class="label">Semantic clustering</text><text x="750" y="639" text-anchor="middle" class="small">Category + similarity + ticker + time</text>
-<rect x="1010" y="585" width="400" height="75" rx="12" class="warn"/><text x="1210" y="614" text-anchor="middle" class="label">Signal metadata + impact</text><text x="1210" y="639" text-anchor="middle" class="small">Novelty / corroboration / decay / heuristic 1–10</text>
-<path d="M290 560 V585 M750 560 V574 H750 V585 M1210 560 V574 H1210 V585 M490 622 H550 M950 622 H1010" class="arrow"/>
-<!-- event schema -->
-<path d="M1210 660 V716 H750 V739" class="arrow"/>
-<rect x="300" y="739" width="900" height="78" rx="16" class="event"/>
-<text x="750" y="770" text-anchor="middle" class="label">4 · Canonical FinancialEvent contract</text>
-<text x="750" y="795" text-anchor="middle" class="small">Sentiment · category · tickers · impact · provenance · cluster · confidence</text>
-<!-- modules -->
-<path d="M750 817 V842 H385 V858 M750 842 H1115 V858" class="arrow"/>
-<rect x="70" y="858" width="630" height="112" rx="16" class="module"/>
-<text x="385" y="887" text-anchor="middle" class="label">Module A · Mock-index rebalancer</text>
-<text x="385" y="915" text-anchor="middle" class="small">12-stock real-ticker universe · long-only constraints</text>
-<text x="385" y="939" text-anchor="middle" class="small">Weight history · maximum 10% one-way turnover</text>
-<rect x="800" y="858" width="630" height="112" rx="16" class="module"/>
-<text x="1115" y="887" text-anchor="middle" class="label">Module B · Synthetic bank stress tester</text>
-<text x="1115" y="915" text-anchor="middle" class="small">Loans · bonds · equities · cash · derivative shock proxy</text>
-<text x="1115" y="939" text-anchor="middle" class="small">Negative sentiment + category + impact threshold</text>
-<text x="750" y="1010" text-anchor="middle" class="small">Outputs: JSON/JSONL snapshots + histories · read-only FastAPI · local Streamlit synthetic replay</text>
+<desc id="desc">Public sources flow through normalized ingestion and pretrained NLP into a canonical financial event, which powers a mock-index rebalancer and synthetic banking stress tester.</desc>
+<defs><marker id="arr" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#78a6d8"/></marker><style>
+.bg{fill:#0b1220}.panel{fill:#111d2f;stroke:#36516e;stroke-width:2}.blue{fill:#142b45;stroke:#5a9fe8;stroke-width:2}.teal{fill:#123b3a;stroke:#38d6b2;stroke-width:2}.purple{fill:#2d2547;stroke:#b7a3ff;stroke-width:2}.amber{fill:#3a2b18;stroke:#f2b65d;stroke-width:2}.h{font:700 25px Arial,sans-serif;fill:#f0f6ff}.sub{font:700 19px Arial,sans-serif;fill:#f0f6ff}.t{font:16px Arial,sans-serif;fill:#b6c8dc}.arrow{stroke:#78a6d8;stroke-width:3;fill:none;marker-end:url(#arr)}
+</style></defs>
+<rect class="bg" width="1500" height="980" rx="18"/>
+<text class="h" x="55" y="48">EVENTPULSE ARCHITECTURE</text><text class="t" x="55" y="78">From public headlines to structured risk signals and simulations</text>
+<rect class="panel" x="45" y="105" width="1410" height="100" rx="16"/><text class="sub" x="750" y="137" text-anchor="middle">1. DATA INGESTION</text>
+<rect class="blue" x="78" y="150" width="400" height="42" rx="10"/><text class="sub" x="278" y="177" text-anchor="middle">GDELT DOC API</text>
+<rect class="blue" x="550" y="150" width="400" height="42" rx="10"/><text class="sub" x="750" y="177" text-anchor="middle">SEC EDGAR 8-K filings</text>
+<rect class="blue" x="1022" y="150" width="400" height="42" rx="10"/><text class="sub" x="1222" y="177" text-anchor="middle">Optional Alpha Vantage</text>
+<path class="arrow" d="M750 205 V230"/>
+<rect class="panel" x="230" y="230" width="1040" height="75" rx="16"/><text class="sub" x="750" y="258" text-anchor="middle">2. NORMALIZE, ARCHIVE AND DEDUPLICATE</text><text class="t" x="750" y="285" text-anchor="middle">Article schema · timestamps / source / URL · JSONL archive · separate processed registry</text>
+<path class="arrow" d="M750 305 V330"/>
+<rect class="panel" x="45" y="330" width="1410" height="265" rx="16"/><text class="sub" x="70" y="362">3. NLP AND EVENT INTELLIGENCE</text>
+<rect class="teal" x="75" y="385" width="410" height="75" rx="12"/><text class="sub" x="280" y="413" text-anchor="middle">FinBERT sentiment</text><text class="t" x="280" y="439" text-anchor="middle">ProsusAI/finbert · score [-1, 1]</text>
+<rect class="teal" x="545" y="385" width="410" height="75" rx="12"/><text class="sub" x="750" y="413" text-anchor="middle">Event classification router</text><text class="t" x="750" y="439" text-anchor="middle">Finance-topic model + zero-shot ModernBERT</text>
+<rect class="teal" x="1015" y="385" width="410" height="75" rx="12"/><text class="sub" x="1220" y="413" text-anchor="middle">Entity and ticker resolution</text><text class="t" x="1220" y="439" text-anchor="middle">Financial NER + source/entity merge</text>
+<rect class="teal" x="75" y="485" width="410" height="75" rx="12"/><text class="sub" x="280" y="513" text-anchor="middle">Semantic embeddings</text><text class="t" x="280" y="539" text-anchor="middle">BAAI/bge-small-en-v1.5</text>
+<rect class="teal" x="545" y="485" width="410" height="75" rx="12"/><text class="sub" x="750" y="513" text-anchor="middle">Semantic clustering</text><text class="t" x="750" y="539" text-anchor="middle">Category · similarity · ticker · time</text>
+<rect class="amber" x="1015" y="485" width="410" height="75" rx="12"/><text class="sub" x="1220" y="513" text-anchor="middle">Point-in-time signals + impact</text><text class="t" x="1220" y="539" text-anchor="middle">Novelty · corroboration · decay · heuristic 1-10</text>
+<path class="arrow" d="M750 595 V625"/>
+<rect class="purple" x="220" y="625" width="1060" height="82" rx="16"/><text class="sub" x="750" y="656" text-anchor="middle">4. CANONICAL FINANCIAL EVENT</text><text class="t" x="750" y="683" text-anchor="middle">Category / confidence · sentiment · impact · tickers · source provenance · cluster</text>
+<path class="arrow" d="M750 707 V735 H390 V755"/><path class="arrow" d="M750 735 H1110 V755"/>
+<rect class="blue" x="45" y="755" width="690" height="130" rx="16"/><text class="sub" x="390" y="785" text-anchor="middle">5A. MODULE A</text><text class="sub" x="390" y="812" text-anchor="middle">12-stock real-ticker mock-index rebalancer</text><text class="t" x="390" y="840" text-anchor="middle">Long-only weights · weight bounds · 10% turnover cap</text><text class="t" x="390" y="864" text-anchor="middle">Progressive synthetic replay snapshots</text>
+<rect class="purple" x="765" y="755" width="690" height="130" rx="16"/><text class="sub" x="1110" y="785" text-anchor="middle">5B. MODULE B</text><text class="sub" x="1110" y="812" text-anchor="middle">Synthetic USD banking stress tester</text><text class="t" x="1110" y="840" text-anchor="middle">Negative sentiment + category + impact thresholds</text><text class="t" x="1110" y="864" text-anchor="middle">Loans / bonds / equities / cash / derivative-shock proxy</text>
+<text class="t" x="55" y="930">Outputs: JSON/JSONL snapshots and histories · read-only FastAPI · local Streamlit synthetic replay</text>
 </svg>
