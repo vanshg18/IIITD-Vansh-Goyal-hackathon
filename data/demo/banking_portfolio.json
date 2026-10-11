@@ -1,7 +1,7 @@
 {
   "portfolio_id": "synthetic_wholesale_bank_001",
   "name": "Synthetic Wholesale Banking Portfolio (USD; illustrative only)",
-  "total_assets": 1000000000.0,
+  "total_assets": 1000000000,
   "currency": "USD",
   "positions": [
     {
@@ -9,7 +9,7 @@
       "name": "Technology and software corporate loans",
       "asset_class": "loans",
       "sector": "Technology",
-      "market_value": 160000000.0,
+      "market_value": 160000000,
       "base_default_rate": 0.025
     },
     {
@@ -17,7 +17,7 @@
       "name": "Commercial real estate loans",
       "asset_class": "loans",
       "sector": "Real Estate",
-      "market_value": 180000000.0,
+      "market_value": 180000000,
       "base_default_rate": 0.04
     },
     {
@@ -25,7 +25,7 @@
       "name": "Industrial and transport corporate loans",
       "asset_class": "loans",
       "sector": "Industrials",
-      "market_value": 120000000.0,
+      "market_value": 120000000,
       "base_default_rate": 0.02
     },
     {
@@ -33,7 +33,7 @@
       "name": "Consumer and diversified wholesale credit",
       "asset_class": "loans",
       "sector": "Consumer",
-      "market_value": 110000000.0,
+      "market_value": 110000000,
       "base_default_rate": 0.03
     },
     {
@@ -41,7 +41,7 @@
       "name": "Government bond holdings",
       "asset_class": "government_bonds",
       "sector": "Government Bonds",
-      "market_value": 200000000.0,
+      "market_value": 200000000,
       "modified_duration": 5.5
     },
     {
@@ -49,8 +49,8 @@
       "name": "Investment-grade corporate bond holdings",
       "asset_class": "corporate_bonds",
       "sector": "Corporate Bonds",
-      "market_value": 130000000.0,
-      "modified_duration": 4.0,
+      "market_value": 130000000,
+      "modified_duration": 4,
       "spread_duration": 3.8
     },
     {
@@ -58,14 +58,21 @@
       "name": "Listed equity and strategic investment holdings",
       "asset_class": "equities",
       "sector": "Technology",
-      "market_value": 60000000.0
+      "market_value": 60000000
     },
     {
       "position_id": "cash",
       "name": "Cash and near-cash assets",
       "asset_class": "cash",
       "sector": "Cash",
-      "market_value": 40000000.0
+      "market_value": 10000000
+    },
+    {
+      "position_id": "deriv_equity_index",
+      "name": "Synthetic equity-index derivative exposure (scenario-shock proxy)",
+      "asset_class": "derivatives",
+      "sector": "Equity Index",
+      "market_value": 30000000
     }
   ]
 }
