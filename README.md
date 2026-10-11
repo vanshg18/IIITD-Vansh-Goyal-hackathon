@@ -128,7 +128,7 @@ Open `http://127.0.0.1:8000/docs` for interactive API documentation. Routes incl
 python -m pytest -q
 ```
 
-Observed local run: **81 passed, 1 warning**. The warning is a Starlette/HTTPX test-client deprecation warning. These tests check software behaviour; they are not real-world NLP accuracy metrics.
+Observed local run on the updated review branch: **89 passed, 1 warning**. The warning is a Starlette/HTTPX test-client deprecation warning. These tests check software behaviour; they are not real-world NLP accuracy metrics.
 
 ## 5. Key Results & Domain Impact
 
@@ -140,20 +140,23 @@ Observed from `python -m src.engine.run_demo_pipeline` and displayed in the Stre
 |---|---:|
 | Synthetic articles loaded | 12 |
 | Structured events emitted | 12 |
-| Events used by Module A | 5 |
-| Module A one-way turnover | 9.15% |
+| Mock-index holdings | 12 real ticker symbols |
+| Cluster contributions across replay snapshots | 11 |
+| Module A rebalance history snapshots | 3 |
+| Latest Module A one-way turnover | 5.90% |
 | Configured Module A turnover cap | 10% |
-| Module B stress scenarios triggered | 2 |
-| Software tests | 81 passed, 1 warning |
+| Module B stress results | 3 independent trigger runs (2 scenario names) |
+| Software tests | 89 passed, 1 warning |
 
-The following values were observed on the original fictional-company fixture before the last-minute real-ticker replay and derivative portfolio update. **Rerun the current branch and replace this table with the fresh run output before submission.** The two scenarios are independently evaluated and are not cumulative:
+The updated replay produced three independently triggered stress results. The Credit deterioration scenario is triggered once by a Credit event and once by a separate Regulatory event; these are distinct trigger runs against the same starting portfolio, not cumulative losses.
 
-| Scenario | Trigger event / impact | Portfolio before | Portfolio after | Simulated loss |
+| Scenario | Trigger event / impact | Portfolio before (USD) | Portfolio after (USD) | Simulated loss (USD) |
 |---|---|---:|---:|---:|
-| Broad Credit Deterioration | Credit / 8.86 out of 10 | 1,000,000,000 | 929,056,000 | 70,944,000 (7.0944%) |
-| Unexpected Monetary Tightening | Monetary Policy / 8.24 out of 10 | 1,000,000,000 | 944,540,000 | 55,460,000 (5.5460%) |
+| Broad Credit Deterioration | Credit / 8.88 out of 10 | 1,000,000,000 | 923,056,000 | 76,944,000 (7.6944%) |
+| Geopolitical / Supply Disruption Stress | Supply Chain / 8.14 out of 10 | 1,000,000,000 | 926,120,000 | 73,880,000 (7.3880%) |
+| Broad Credit Deterioration | Regulatory / 8.03 out of 10 | 1,000,000,000 | 923,056,000 | 76,944,000 (7.6944%) |
 
-These original-run amounts are now denominated in USD by the updated synthetic bank fixture; however, the table above is from the prior portfolio configuration and is retained only as a historical reference. Do not present those exact amounts as the output of the updated branch. The scenarios are hypothetical, independent, and not forecasts of an actual bank.
+All holdings, source stories, and shocks in this replay are synthetic. USD is the declared currency of the synthetic bank fixture. Scenario results are not real-bank forecasts, and the three losses must not be added together.
 
 ### Live-source smoke test observed during development
 
